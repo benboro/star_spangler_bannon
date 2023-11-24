@@ -90,7 +90,6 @@ def export_data(
         df: pd.DataFrame,
         path_directory: str,
         song_duration: Union[int, float],
-        encode: str = "utf-8",
         bool_bref: bool = False):
     """Exports dataframe to csv"""
 
@@ -98,20 +97,18 @@ def export_data(
     cols_to_rename = {"words": "Words", "format_start_time": "Time"}
     export_df = df[cols_to_rename.keys()].rename(columns=cols_to_rename)
     export_filename = "track_anthem_{tm}s{suf}.xlsx".format(tm=str(song_duration), suf=("_bref" if bool_bref else ""))
+    export_fullpath = os.path.join(path_directory, "outputs", export_filename)
 
     align_left = {'align': 'left'}
     bold_true = {'bold': True}
-    color_lightblue = '#dae1f2'
-    color_darkblue = '#8fa9db'
     color_black = '#000000'
-    bg_blue = {'bg_color': color_lightblue}
     top_border = {'top': 1, 'top_color': color_black}
     bottom_border = {'bottom': 1, 'bottom_color': color_black}
     excel_options = {
         "default_date_format": "yyyy-mm-dd",
         "default_format_properties": {"font_name": "Calibri", "font_size": 11, 'bg_color': '#FFFFFF'}
     }
-    with xlsxwriter.Workbook(filename=os.path.join(path_directory, export_filename), options=excel_options) as wb:
+    with xlsxwriter.Workbook(filename=export_fullpath, options=excel_options) as wb:
         ws = wb.add_worksheet(name="Lyrics")
         row_start = 1
         col_start = 1
@@ -151,21 +148,12 @@ def export_data(
                         ws.write_string(row_current, col_current + ir, value, cell_format=fmt_master[ir])
                     else:
                         raise Exception("Numeric type not expected")
-                        # fmt_list.append(col_fmt[fld])
-                        # fmt_dict = {k: v for d in fmt_list for k, v in d.items()}
-                        # fmt_master[ir] = wb.add_format(fmt_dict)
-                        # ws.write_number(row_current, col_current + ir, value, cell_format=fmt_master[ir])
-                        # set column length
 
                 if bool_lastrow:
                     if fld in ['Words']:
                         ws.set_column(col_current + ir, col_current + ir, width=15)
                     elif fld in ['Time']:
                         ws.set_column(col_current + ir, col_current + ir, width=7)
-
-        # ws.autofit()
-
-    # export_df.to_csv(os.path.join(path_directory, export_filename), index=False, encoding=encode)
 
     print("Exported file {}".format(export_filename))
 
@@ -174,13 +162,12 @@ def run_lyrics_analysis(song_duration, directory: str = None, bref: bool = False
     """Runs through analysis process"""
     word_length_filename = "ssb_word_length.csv"
     encoder_read = "cp1252"
-    encoder_write = "cp1252"
     if bref:
         word_length_filename = "bref_word_length.csv"
         encoder_read = "utf-8"
 
     lyrics_data = read_lyric_data(path=os.path.join(directory, word_length_filename), encode=encoder_read)
     notes_data = create_time_columns(df=lyrics_data, song_duration=song_duration)
-    export_data(notes_data, path_directory=directory, song_duration=song_duration, encode=encoder_write, bool_bref=bref)
+    export_data(notes_data, path_directory=directory, song_duration=song_duration, bool_bref=bref)
 
     return notes_data
