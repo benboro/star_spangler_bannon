@@ -96,7 +96,7 @@ def export_data(
     # export only necessary fields (and rename them)
     cols_to_rename = {"words": "Words", "format_start_time": "Time"}
     export_df = df[cols_to_rename.keys()].rename(columns=cols_to_rename)
-    export_filename = "track_anthem_{tm}s{suf}.xlsx".format(tm=str(song_duration), suf=("_bref" if bool_bref else ""))
+    export_filename = "track_anthem_{tm}s{suf}.xlsx".format(tm=str(song_duration).replace(".","_"), suf=("_bref" if bool_bref else ""))
     export_fullpath = os.path.join(path_directory, "outputs", export_filename)
 
     align_left = {'align': 'left'}
