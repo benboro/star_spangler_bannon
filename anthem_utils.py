@@ -90,75 +90,83 @@ def export_data(
         df: pd.DataFrame,
         path_directory: str,
         song_duration: Union[int, float],
-        bool_bref: bool = False):
-    """Exports dataframe to csv"""
+        bool_bref: bool = False,
+        all_cols: bool = True
+):
+    """Exports dataframe to csv/xlsx"""
 
-    # export only necessary fields (and rename them)
-    cols_to_rename = {"words": "Words", "format_start_time": "Time"}
-    export_df = df[cols_to_rename.keys()].rename(columns=cols_to_rename)
-    export_filename = "track_anthem_{tm}s{suf}.xlsx".format(tm=str(song_duration).replace(".","_"), suf=("_bref" if bool_bref else ""))
+    file_type = 'csv' if all_cols else 'xlsx'
+
+    export_filename = "track_anthem_{tm}s{suf}.{ftype}".format(tm=str(song_duration).replace(".","_"), suf=("_bref" if bool_bref else ""), ftype=file_type)
     export_fullpath = os.path.join(path_directory, "outputs", export_filename)
 
-    align_left = {'align': 'left'}
-    bold_true = {'bold': True}
-    color_black = '#000000'
-    top_border = {'top': 1, 'top_color': color_black}
-    bottom_border = {'bottom': 1, 'bottom_color': color_black}
-    excel_options = {
-        "default_date_format": "yyyy-mm-dd",
-        "default_format_properties": {"font_name": "Calibri", "font_size": 11, 'bg_color': '#FFFFFF'}
-    }
-    with xlsxwriter.Workbook(filename=export_fullpath, options=excel_options) as wb:
-        ws = wb.add_worksheet(name="Lyrics")
-        row_start = 1
-        col_start = 1
+    if all_cols:
+        df.to_csv(export_fullpath, index=False, encoding="cp1252")
+    else:
+        # export only necessary fields (and rename them)
+        cols_to_rename = {"words": "Words", "format_start_time": "Time"}
+        export_df = df[cols_to_rename.keys()].rename(columns=cols_to_rename)
 
-        fmt_header_left = wb.add_format({**bold_true, **align_left, **top_border, **bottom_border})
+        align_left = {'align': 'left'}
+        bold_true = {'bold': True}
+        color_black = '#000000'
+        top_border = {'top': 1, 'top_color': color_black}
+        bottom_border = {'bottom': 1, 'bottom_color': color_black}
+        excel_options = {
+            "default_date_format": "yyyy-mm-dd",
+            "default_format_properties": {"font_name": "Calibri", "font_size": 11, 'bg_color': '#FFFFFF'}
+        }
+        with xlsxwriter.Workbook(filename=export_fullpath, options=excel_options) as wb:
+            ws = wb.add_worksheet(name="Lyrics")
+            row_start = 1
+            col_start = 1
 
-        row_current = row_start
-        col_current = col_start
+            fmt_header_left = wb.add_format({**bold_true, **align_left, **top_border, **bottom_border})
 
-        # write columns to worksheet
-        for ic, colname in enumerate(export_df.columns):
-            ws.write_string(row_current, col_current + ic, colname, cell_format=fmt_header_left)
+            row_current = row_start
+            col_current = col_start
 
-        # write values to worksheet
-        for row_df in range(len(export_df)):
-            row_current += 1
+            # write columns to worksheet
+            for ic, colname in enumerate(export_df.columns):
+                ws.write_string(row_current, col_current + ic, colname, cell_format=fmt_header_left)
 
-            fmt_master = {}
-            bool_lastrow = row_df == len(export_df) - 1
+            # write values to worksheet
+            for row_df in range(len(export_df)):
+                row_current += 1
 
-            for ir, (fld, value) in enumerate(export_df.iloc[row_df].to_dict().items()):
-                fmt_list = []
-                bool_blank = pd.isna(value)
+                fmt_master = {}
+                bool_lastrow = row_df == len(export_df) - 1
 
-                if bool_lastrow:
-                    fmt_list.append(bold_true)
-                    fmt_list.append(bottom_border)
+                for ir, (fld, value) in enumerate(export_df.iloc[row_df].to_dict().items()):
+                    fmt_list = []
+                    bool_blank = pd.isna(value)
 
-                if bool_blank:
-                    fmt_dict = {k: v for d in fmt_list for k, v in d.items()}
-                    fmt_master[ir] = wb.add_format(fmt_dict)
-                    ws.write_blank(row_current, col_current + ir, None, cell_format=fmt_master[ir])
-                else:
-                    if isinstance(value, str):
+                    if bool_lastrow:
+                        fmt_list.append(bold_true)
+                        fmt_list.append(bottom_border)
+
+                    if bool_blank:
                         fmt_dict = {k: v for d in fmt_list for k, v in d.items()}
                         fmt_master[ir] = wb.add_format(fmt_dict)
-                        ws.write_string(row_current, col_current + ir, value, cell_format=fmt_master[ir])
+                        ws.write_blank(row_current, col_current + ir, None, cell_format=fmt_master[ir])
                     else:
-                        raise Exception("Numeric type not expected")
+                        if isinstance(value, str):
+                            fmt_dict = {k: v for d in fmt_list for k, v in d.items()}
+                            fmt_master[ir] = wb.add_format(fmt_dict)
+                            ws.write_string(row_current, col_current + ir, value, cell_format=fmt_master[ir])
+                        else:
+                            raise Exception("Numeric type not expected")
 
-                if bool_lastrow:
-                    if fld in ['Words']:
-                        ws.set_column(col_current + ir, col_current + ir, width=15)
-                    elif fld in ['Time']:
-                        ws.set_column(col_current + ir, col_current + ir, width=7)
+                    if bool_lastrow:
+                        if fld in ['Words']:
+                            ws.set_column(col_current + ir, col_current + ir, width=15)
+                        elif fld in ['Time']:
+                            ws.set_column(col_current + ir, col_current + ir, width=7)
 
     print("Exported file {}".format(export_filename))
 
 
-def run_lyrics_analysis(song_duration, directory: str = None, bref: bool = False) -> pd.DataFrame:
+def run_lyrics_analysis(song_duration, directory: str = None, bref: bool = False, all_cols: bool = True) -> pd.DataFrame:
     """Runs through analysis process"""
     word_length_filename = "ssb_word_length.csv"
     encoder_read = "cp1252"
@@ -168,6 +176,6 @@ def run_lyrics_analysis(song_duration, directory: str = None, bref: bool = False
 
     lyrics_data = read_lyric_data(path=os.path.join(directory, word_length_filename), encode=encoder_read)
     notes_data = create_time_columns(df=lyrics_data, song_duration=song_duration)
-    export_data(notes_data, path_directory=directory, song_duration=song_duration, bool_bref=bref)
+    export_data(notes_data, path_directory=directory, song_duration=song_duration, bool_bref=bref, all_cols=all_cols)
 
     return notes_data
