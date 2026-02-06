@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Spangler Bannon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="screen active">
+        <h1>Star Spangler Bannon</h1>
+        <p class="subtitle">National Anthem Karaoke Timer</p>
+
+        <div class="control-group">
+            <label for="duration-slider">Duration: <span id="duration-display">120.5</span>s</label>
+            <input type="range" id="duration-slider" min="30" max="200" step="0.5" value="120.5">
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="bref-toggle">
+                Baseball Reference Mode
+            </label>
+        </div>
+
+        <button id="prepare-btn" class="btn-primary">Prepare Track</button>
+    </div>
+
+    <!-- Player Screen -->
+    <div id="player-screen" class="screen">
+        <div class="time-display">
+            <span id="time-elapsed">0:00.0</span> / <span id="time-total">0:00.0</span>
+        </div>
+
+        <div id="lyrics-container"></div>
+
+        <div id="progress-bar-container">
+            <div id="progress-bar-fill"></div>
+            <div id="progress-bar-handle"></div>
+        </div>
+
+        <div class="player-controls">
+            <button id="back-btn" class="btn-secondary">Back</button>
+            <button id="play-pause-btn" class="btn-primary">Play</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+</body>
+</html>

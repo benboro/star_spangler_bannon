@@ -17,9 +17,14 @@ python src/anthem_analysis.py -t 90 -b    # 90 seconds, baseball reference mode
 python src/anthem_analysis.py -x           # Excel output instead of CSV
 ```
 
+**Run the web interface:**
+```bash
+python src/web_app.py                      # opens at http://localhost:5000
+```
+
 **Dependencies:**
 ```bash
-pip install pandas xlsxwriter
+pip install pandas xlsxwriter flask
 ```
 
 ## Architecture
@@ -30,6 +35,8 @@ pip install pandas xlsxwriter
 star_spangler_bannon/
 ├── data/           # Input data files (CSVs, lyrics text)
 ├── src/            # Python source files
+├── static/         # Web interface static assets (CSS, JS)
+├── templates/      # Flask HTML templates
 ├── outputs/        # Generated output files (gitignored)
 ├── .gitignore
 ├── CLAUDE.md
@@ -40,6 +47,7 @@ star_spangler_bannon/
 
 - **src/anthem_analysis.py** - CLI entry point with argparse. Supports `-t`/`--time`, `-b`/`--bref`, `-x`/`--xlsx` flags
 - **src/anthem_utils.py** - All utility functions for time conversion, lyrics processing, data analysis, and export
+- **src/web_app.py** - Flask web interface with karaoke-style lyric player. Reuses `anthem_utils` for timing calculations
 
 ### Data Files (in `data/`)
 
