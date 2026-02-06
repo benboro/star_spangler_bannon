@@ -1,5 +1,7 @@
 /.idea/*
 /outputs/*
+__pycache__/
+*.pyc
 /*.png
 /*.jpg
 /*.psd

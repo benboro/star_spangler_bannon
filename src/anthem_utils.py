@@ -49,11 +49,11 @@ def read_ssb_lyrics(path: str) -> list:
     return ssb_words
 
 
-def ssb_lyrics_to_dataframe(path_directory, output_filename="ssb_words.csv"):
+def ssb_lyrics_to_dataframe(data_dir, output_filename="ssb_words.csv"):
     """Get lyrics in Star Spangled Banner as list of words"""
-    ssb_words = read_ssb_lyrics(path=os.path.join(path_directory, "star_spangled_banner.txt"))
+    ssb_words = read_ssb_lyrics(path=os.path.join(data_dir, "star_spangled_banner.txt"))
     pd.DataFrame({"words": ssb_words}) \
-        .to_csv(os.path.join(path_directory, output_filename), index=False, encoding="cp1252")
+        .to_csv(os.path.join(data_dir, output_filename), index=False, encoding="cp1252")
 
 
 def read_lyric_data(path: str, encode: str = None, bool_bref: bool = False) -> pd.DataFrame:
@@ -88,7 +88,7 @@ def create_time_columns(df: pd.DataFrame, song_duration: Union[int, float]) -> p
 
 def export_data(
         df: pd.DataFrame,
-        path_directory: str,
+        output_dir: str,
         song_duration: Union[int, float],
         bool_bref: bool = False,
         all_cols: bool = True
@@ -98,7 +98,7 @@ def export_data(
     file_type = 'csv' if all_cols else 'xlsx'
 
     export_filename = "track_anthem_{tm}s{suf}.{ftype}".format(tm=str(song_duration).replace(".","_"), suf=("_bref" if bool_bref else ""), ftype=file_type)
-    export_fullpath = os.path.join(path_directory, "outputs", export_filename)
+    export_fullpath = os.path.join(output_dir, export_filename)
 
     if all_cols:
         df.to_csv(export_fullpath, index=False, encoding="cp1252")
@@ -166,7 +166,7 @@ def export_data(
     print("Exported file {}".format(export_filename))
 
 
-def run_lyrics_analysis(song_duration, directory: str = None, bref: bool = False, all_cols: bool = True) -> pd.DataFrame:
+def run_lyrics_analysis(song_duration, data_dir: str = None, output_dir: str = None, bref: bool = False, all_cols: bool = True) -> pd.DataFrame:
     """Runs through analysis process"""
     word_length_filename = "ssb_word_length.csv"
     encoder_read = "cp1252"
@@ -174,8 +174,8 @@ def run_lyrics_analysis(song_duration, directory: str = None, bref: bool = False
         word_length_filename = "bref_word_length.csv"
         encoder_read = "utf-8"
 
-    lyrics_data = read_lyric_data(path=os.path.join(directory, word_length_filename), encode=encoder_read)
+    lyrics_data = read_lyric_data(path=os.path.join(data_dir, word_length_filename), encode=encoder_read)
     notes_data = create_time_columns(df=lyrics_data, song_duration=song_duration)
-    export_data(notes_data, path_directory=directory, song_duration=song_duration, bool_bref=bref, all_cols=all_cols)
+    export_data(notes_data, output_dir=output_dir, song_duration=song_duration, bool_bref=bref, all_cols=all_cols)
 
     return notes_data

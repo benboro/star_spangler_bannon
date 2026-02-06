@@ -12,10 +12,10 @@ The project includes a baseball reference version that maps anthem words to MLB 
 
 **Run the analysis:**
 ```bash
-python anthem_analysis.py
+python src/anthem_analysis.py
+python src/anthem_analysis.py -t 90 -b    # 90 seconds, baseball reference mode
+python src/anthem_analysis.py -x           # Excel output instead of CSV
 ```
-
-This generates timing analysis files in `outputs/` for the target duration (currently 120.5 seconds).
 
 **Dependencies:**
 ```bash
@@ -24,22 +24,36 @@ pip install pandas xlsxwriter
 
 ## Architecture
 
+### Directory Structure
+
+```
+star_spangler_bannon/
+├── data/           # Input data files (CSVs, lyrics text)
+├── src/            # Python source files
+├── outputs/        # Generated output files (gitignored)
+├── .gitignore
+├── CLAUDE.md
+└── README.md
+```
+
 ### Core Files
 
-- **anthem_analysis.py** - Entry point. Loads Super Bowl anthem timing data, sets target duration, calls `run_lyrics_analysis()`
-- **anthem_utils.py** - All utility functions for time conversion, lyrics processing, data analysis, and export
+- **src/anthem_analysis.py** - CLI entry point with argparse. Supports `-t`/`--time`, `-b`/`--bref`, `-x`/`--xlsx` flags
+- **src/anthem_utils.py** - All utility functions for time conversion, lyrics processing, data analysis, and export
 
-### Data Files
+### Data Files (in `data/`)
 
 - **ssb_word_length.csv** - Word-to-note-length mapping (82 words from first stanza)
 - **bref_word_length.csv** - Baseball Reference version with MLB player names
 - **score_anthem_data.csv** - Historical Super Bowl anthem performance times
+- **star_spangled_banner.txt** - Full lyrics text
+- **bref_spangled_banner.csv** - Baseball reference lyrics mapping
 
-### Key Functions in anthem_utils.py
+### Key Functions in src/anthem_utils.py
 
-- `run_lyrics_analysis(song_duration, directory, bref, all_cols)` - Main pipeline orchestrator
+- `run_lyrics_analysis(song_duration, data_dir, output_dir, bref, all_cols)` - Main pipeline orchestrator
 - `create_time_columns(df, song_duration)` - Calculates timing metrics (note_share, word_time, word_cum_time, word_start_time)
-- `export_data(df, path_directory, song_duration, bool_bref, all_cols)` - Exports to CSV or formatted Excel
+- `export_data(df, output_dir, song_duration, bool_bref, all_cols)` - Exports to CSV or formatted Excel
 - `read_lyric_data(path, encode, bool_bref)` - Loads and validates CSV data
 - `minutes_to_seconds(time_val)` / `seconds_to_minutes(total_seconds)` - Time format conversion
 
