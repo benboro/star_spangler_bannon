@@ -101,7 +101,7 @@ def export_data(
     export_fullpath = os.path.join(output_dir, export_filename)
 
     if all_cols:
-        df.to_csv(export_fullpath, index=False, encoding="cp1252")
+        df.to_csv(export_fullpath, index=False, encoding="cp1252", float_format="%.6f")
     else:
         # export only necessary fields (and rename them)
         cols_to_rename = {"words": "Words", "format_start_time": "Time"}
