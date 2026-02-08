@@ -41,6 +41,15 @@ def get_ssb_line_word_counts():
     return counts
 
 
+def get_bref_karaoke_lines():
+    """Read bref_spangled_banner.txt and return karaoke lines."""
+    path = os.path.join(DATA_DIR, "bref_spangled_banner.txt")
+    with open(path, "r", encoding="utf-8") as f:
+        lines = [ln.strip() for ln in f]
+
+    return [line for line in lines if line]
+
+
 def build_ssb_lines(df, line_word_counts):
     """Group SSB dataframe rows into lines based on word counts from lyrics text."""
     lines = []
@@ -67,44 +76,56 @@ def build_ssb_lines(df, line_word_counts):
     return lines
 
 
-def build_bref_lines(df, ssb_line_word_counts):
-    """Group BREF dataframe rows into lines using cumulative note_length share thresholds."""
-    # compute SSB cumulative word count boundaries as share of total words
-    ssb_total = sum(ssb_line_word_counts)
-    ssb_cum = []
-    running = 0
-    for count in ssb_line_word_counts:
-        running += count
-        ssb_cum.append(running / ssb_total)
-
-    # filter out [end] row
+def build_bref_lines(df, bref_karaoke_lines):
+    """Group BREF dataframe rows into lines based on karaoke lines in bref_spangled_banner.txt."""
     df_filtered = df[df["words"] != "[end]"].copy()
 
-    # compute cumulative note_length share for each BREF entry
-    total_note_length = df_filtered["note_length"].sum()
-    df_filtered = df_filtered.copy()
-    df_filtered["cum_share"] = df_filtered["note_length"].cumsum() / total_note_length
+    lines = []
+    idx = 0
+    for line_text in bref_karaoke_lines:
+        target = " ".join(line_text.split())
+        line_words = []
+        assembled = []
+        matched = False
 
-    # assign each word to a line based on where its cumulative share falls
-    lines = [[] for _ in ssb_line_word_counts]
-    for _, row in df_filtered.iterrows():
-        cum = row["cum_share"]
-        line_idx = 0
-        for i, threshold in enumerate(ssb_cum):
-            if cum <= threshold + 1e-9:
-                line_idx = i
+        while idx < len(df_filtered):
+            row = df_filtered.iloc[idx]
+            line_words.append({
+                "word": row["words"],
+                "startTime": round(row["word_start_time"], 4),
+                "endTime": round(row["word_cum_time"], 4),
+                "duration": round(row["word_time"], 4),
+            })
+            assembled.append(row["words"])
+            idx += 1
+
+            candidate = " ".join(assembled)
+            if candidate == target:
+                matched = True
                 break
-        else:
-            line_idx = len(ssb_cum) - 1
 
-        lines[line_idx].append({
-            "word": row["words"],
-            "startTime": round(row["word_start_time"], 4),
-            "endTime": round(row["word_cum_time"], 4),
-            "duration": round(row["word_time"], 4),
-        })
+        if line_words and not matched:
+            raise ValueError(
+                "bref_spangled_banner.txt line does not align with timing data: '{}'".format(target)
+            )
+        if line_words:
+            lines.append({"words": line_words})
 
-    return [{"words": line} for line in lines if line]
+    # Keep any trailing words if the text file line counts are ever short.
+    if idx < len(df_filtered):
+        trailing_words = []
+        while idx < len(df_filtered):
+            row = df_filtered.iloc[idx]
+            trailing_words.append({
+                "word": row["words"],
+                "startTime": round(row["word_start_time"], 4),
+                "endTime": round(row["word_cum_time"], 4),
+                "duration": round(row["word_time"], 4),
+            })
+            idx += 1
+        lines.append({"words": trailing_words})
+
+    return lines
 
 
 @app.route("/")
@@ -126,12 +147,11 @@ def timing():
     df = aut.read_lyric_data(path=os.path.join(DATA_DIR, filename))
     df = aut.create_time_columns(df=df, song_duration=duration)
 
-    # get SSB line word counts for line grouping
-    line_word_counts = get_ssb_line_word_counts()
-
     if bref:
-        lines = build_bref_lines(df, line_word_counts)
+        bref_karaoke_lines = get_bref_karaoke_lines()
+        lines = build_bref_lines(df, bref_karaoke_lines)
     else:
+        line_word_counts = get_ssb_line_word_counts()
         lines = build_ssb_lines(df, line_word_counts)
 
     return jsonify({
