@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)",
+      "Bash(python:*)",
+      "Bash(where:*)",
+      "Bash(C:Usersbmborminiconda3python.exe -c \"import pandas; print\\(pandas.__version__\\)\")",
+      "Bash(\"/c/Users/bmbor/miniconda3/python.exe\" -c \"import pandas; print\\(pandas.__version__\\)\")",
+      "Bash(pip install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
