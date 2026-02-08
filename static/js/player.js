@@ -6,7 +6,6 @@
     const playerScreen = document.getElementById("player-screen");
     const durationSlider = document.getElementById("duration-slider");
     const durationInput = document.getElementById("duration-input");
-    const durationDisplay = document.getElementById("duration-display");
     const brefToggle = document.getElementById("bref-toggle");
     const prepareBtn = document.getElementById("prepare-btn");
     const lyricsContainer = document.getElementById("lyrics-container");
@@ -70,7 +69,6 @@
         var formatted = normalized.toFixed(1);
         durationSlider.value = formatted;
         durationInput.value = formatted;
-        durationDisplay.textContent = formatted;
         return normalized;
     }
 
