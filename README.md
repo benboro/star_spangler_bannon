@@ -1,35 +1,11 @@
 # Star Spangler Bannon
 
-A Python data analysis project that analyzes the timing of the National Anthem (The Star-Spangled Banner) by mapping lyrics to musical note lengths. Given a target duration, it calculates when each word should be sung.
+Star Spangler Bannon analyzes National Anthem timing by mapping each word to note length and distributing timing to match a target duration.
 
-Includes a baseball reference version that maps anthem words to MLB player names.
-
-## Repository Structure
-
-```
-star_spangler_bannon/
-├── data/
-│   ├── ssb_word_length.json        # Word-to-note-length mapping (JSON, default)
-│   ├── bref_word_length.json       # Baseball reference version (JSON, default)
-│   ├── score_anthem_data.json      # Historical Super Bowl anthem performance times
-│   ├── bref_spangled_banner.json   # Baseball reference lyrics mapping
-│   ├── ssb_word_length.csv         # Word-to-note-length mapping (CSV, legacy)
-│   ├── bref_word_length.csv        # Baseball reference version (CSV, legacy)
-│   ├── score_anthem_data.csv       # Historical anthem times (CSV, legacy)
-│   ├── bref_spangled_banner.csv    # Baseball reference lyrics (CSV, legacy)
-│   └── star_spangled_banner.txt    # Full lyrics text
-├── src/
-│   ├── anthem_analysis.py          # CLI entry point
-│   ├── anthem_utils.py             # Utility functions
-│   ├── export_js_data.py           # JS data export for static player
-│   └── web_app.py                  # Flask web interface
-├── static/                         # Web interface static assets (CSS, JS)
-├── templates/                      # Flask HTML templates
-├── outputs/                        # Generated output files
-├── .gitignore
-├── CLAUDE.md
-└── README.md
-```
+It includes:
+- Standard Star-Spangled Banner timing
+- Baseball Reference mode (anthem words replaced with MLB player names)
+- A Flask karaoke-style player UI
 
 ## Installation
 
@@ -37,103 +13,120 @@ star_spangler_bannon/
 pip install pandas xlsxwriter flask
 ```
 
+## Repository Structure
+
+```text
+star_spangler_bannon/
+|-- data/         # Input data (JSON default, CSV legacy, lyrics text files)
+|-- src/          # Python source (CLI + Flask app + export script)
+|-- static/       # CSS/JS for web player
+|-- templates/    # HTML templates for Flask
+|-- outputs/      # Generated analysis files (gitignored)
+|-- CLAUDE.md
+|-- AGENTS.md
+`-- README.md
+```
+
 ## Usage
 
 ### CLI
 
-Run from the project root directory:
+Run from project root:
 
 ```bash
-# Default: 119.5s duration, standard lyrics, JSON output
+# Default: 119.5 seconds, standard lyrics, JSON output
 python src/anthem_analysis.py
 
-# Set a custom target duration (90 seconds)
+# Custom duration
 python src/anthem_analysis.py -t 90
 
-# Use baseball reference mode with a custom duration
+# Baseball Reference mode
 python src/anthem_analysis.py --time 135.5 --bref
 
-# Use CSV format instead of JSON (backward compatibility)
+# CSV input/output compatibility mode
 python src/anthem_analysis.py --csv
 
-# Baseball reference mode + formatted Excel output
+# Excel output
 python src/anthem_analysis.py -t 100 -b -x
 ```
 
-#### CLI Options
+CLI flags:
 
 | Flag | Description |
 |------|-------------|
-| `-t`, `--time` | Target anthem duration in seconds (default: 119.5) |
-| `-b`, `--bref` | Use baseball reference version (MLB player names) |
-| `-x`, `--xlsx` | Export as formatted Excel instead of JSON |
-| `-c`, `--csv` | Use CSV format for input/output instead of JSON (default) |
+| `-t`, `--time` | Target duration in seconds (default `119.5`) |
+| `-b`, `--bref` | Baseball Reference mode |
+| `-x`, `--xlsx` | Export formatted Excel output |
+| `-c`, `--csv` | Use legacy CSV input/output paths |
 
-### Web Interface
+### Web App
 
-Start the Flask development server:
+Start Flask:
 
 ```bash
 python src/web_app.py
 ```
 
-Then open http://localhost:5000 in your browser. The web interface provides a karaoke-style lyric player that highlights words in real time based on the calculated timing.
+Open `http://localhost:5000`.
 
-The `/api/timing` endpoint returns JSON timing data and accepts these query parameters:
+Current player behavior:
+- Default duration is `119.5`.
+- Duration can be changed with slider or numeric input.
+- Duration resolves to nearest `0.5` second and is clamped to `30-200`.
+- Top-left "Return to borovinsky.com" button is available on setup and karaoke screens.
+- Karaoke mode keeps sung words highlighted.
+- Baseball Reference mode switches title to "Star Spangler Bannon Tracker".
+- Baseball Reference karaoke names are clickable and open Baseball Reference pages.
+- On mobile karaoke view, lyrics scroll inside the lyrics container so controls/progress stay accessible.
+
+API endpoint:
+
+`GET /api/timing`
 
 | Parameter | Description |
 |-----------|-------------|
-| `duration` | Target anthem duration in seconds (default: 119.5, clamped to 30–200) |
-| `bref` | Set to `true` for baseball reference mode (default: `false`) |
+| `duration` | Target duration in seconds (default `119.5`, server clamps `30-200`) |
+| `bref` | `true` for Baseball Reference mode, otherwise `false` |
 
-## Web UI Development Workflow
+## Data Files
 
-The web interface exists in two forms:
+Important files in `data/`:
+- `ssb_word_length.json` - Standard word-to-note mapping
+- `bref_word_length.json` - Baseball Reference word-to-note mapping
+- `star_spangled_banner.txt` - Standard lyrics source text
+- `bref_spangled_banner.txt` - Baseball Reference karaoke line breaks/layout
+- `bref_spangled_banner.json` - Baseball Reference metadata, including per-word links
+- `score_anthem_data.json` - Historical anthem performance timing data
 
-1. **Flask app** (this repo) — `static/`, `templates/`, `src/web_app.py`. Uses a server-side `/api/timing` endpoint.
-2. **Static GitHub Pages player** — `C:\Projects\website\ssb-player\` (the [benboro.github.io](https://github.com/benboro/benboro.github.io) repo). All timing computation runs client-side in `player.js`.
-
-### Debugging locally
-
-Use the Flask app for development since it picks up file changes without a build step:
-
-```bash
-python src/web_app.py
-# open http://localhost:5000
-```
-
-Edit `static/js/player.js` and `static/css/style.css` directly — refresh the browser to see changes.
-
-### Updating the GitHub Pages player
-
-After changes are working in the Flask app, sync them to the static player:
-
-1. **CSS changes** — copy `static/css/style.css` directly to `C:\Projects\website\ssb-player\style.css`.
-2. **HTML changes** — copy `templates/index.html` to `C:\Projects\website\ssb-player\index.html`, then replace the two `{{ url_for(...) }}` calls with relative paths (`style.css` and `player.js`).
-3. **JS changes** — the static `player.js` has the same UI code but replaces the `fetch("/api/timing")` call with local computation functions and embedded data arrays. Copy your UI changes into the corresponding section of `C:\Projects\website\ssb-player\player.js`, keeping the data/computation block at the top intact.
-4. **Data file changes** — if `data/ssb_word_length.json` or `data/bref_word_length.json` change, regenerate the embedded JS data:
-   ```bash
-   python src/export_js_data.py
-   ```
-   Then paste the output into the data section at the top of the static `player.js`.
-
-### Publishing
-
-```bash
-cd C:\Projects\website
-git add ssb-player/
-git commit -m "Update SSB player"
-git push
-```
-
-The player is live at https://borovinsky.com/ssb-player/ once GitHub Pages deploys (usually under a minute).
+Legacy CSV equivalents are also present for backward compatibility.
 
 ## Output Files
 
-Generated files are saved to the `outputs/` directory:
+Generated files are written to `outputs/`:
+- `track_anthem_[TIME]s.json` (default)
+- `track_anthem_[TIME]s.csv` (with `--csv`)
+- `track_anthem_[TIME]s.xlsx` (with `--xlsx`)
+- `_bref` suffix is added when Baseball Reference mode is used
 
-- `track_anthem_[TIME]s.json` - Full data with all timing columns (default)
-- `track_anthem_[TIME]s.csv` - Full data with all timing columns (with `--csv`)
-- `track_anthem_[TIME]s.xlsx` - Formatted Excel with Words and Time columns only (with `-x`)
-- `_bref` suffix added when using baseball reference mode
+## Cross-Repo Sync (benboro.github.io)
 
+This repo is the Flask/dev version. The production static player lives in:
+
+`C:\Projects\website\ssb-player\`
+
+After UI/data updates are verified locally, sync these files:
+- `static/css/style.css` -> `C:\Projects\website\ssb-player\style.css`
+- `templates/index.html` -> `C:\Projects\website\ssb-player\index.html`
+- `static/js/player.js` -> `C:\Projects\website\ssb-player\player.js`
+
+For HTML sync, replace Flask static refs:
+- `{{ url_for('static', filename='css/style.css') }}` -> `style.css`
+- `{{ url_for('static', filename='js/player.js') }}` -> `player.js`
+
+If timing source data changes (`data/ssb_word_length.json` or `data/bref_word_length.json`):
+
+```bash
+python src/export_js_data.py
+```
+
+Then paste regenerated data into the top data block in static `player.js`.
