@@ -114,7 +114,7 @@ def index():
 
 @app.route("/api/timing")
 def timing():
-    duration = request.args.get("duration", 120.5, type=float)
+    duration = request.args.get("duration", 119.5, type=float)
     bref = request.args.get("bref", "false").lower() == "true"
 
     # clamp duration

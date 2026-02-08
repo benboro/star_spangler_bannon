@@ -44,7 +44,7 @@ pip install pandas xlsxwriter flask
 Run from the project root directory:
 
 ```bash
-# Default: 120.5s duration, standard lyrics, JSON output
+# Default: 119.5s duration, standard lyrics, JSON output
 python src/anthem_analysis.py
 
 # Set a custom target duration (90 seconds)
@@ -64,7 +64,7 @@ python src/anthem_analysis.py -t 100 -b -x
 
 | Flag | Description |
 |------|-------------|
-| `-t`, `--time` | Target anthem duration in seconds (default: 120.5) |
+| `-t`, `--time` | Target anthem duration in seconds (default: 119.5) |
 | `-b`, `--bref` | Use baseball reference version (MLB player names) |
 | `-x`, `--xlsx` | Export as formatted Excel instead of JSON |
 | `-c`, `--csv` | Use CSV format for input/output instead of JSON (default) |
@@ -83,7 +83,7 @@ The `/api/timing` endpoint returns JSON timing data and accepts these query para
 
 | Parameter | Description |
 |-----------|-------------|
-| `duration` | Target anthem duration in seconds (default: 120.5, clamped to 30–200) |
+| `duration` | Target anthem duration in seconds (default: 119.5, clamped to 30–200) |
 | `bref` | Set to `true` for baseball reference mode (default: `false`) |
 
 ## Web UI Development Workflow
@@ -136,3 +136,4 @@ Generated files are saved to the `outputs/` directory:
 - `track_anthem_[TIME]s.csv` - Full data with all timing columns (with `--csv`)
 - `track_anthem_[TIME]s.xlsx` - Formatted Excel with Words and Time columns only (with `-x`)
 - `_bref` suffix added when using baseball reference mode
+
