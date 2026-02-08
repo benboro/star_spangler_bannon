@@ -2,8 +2,3 @@
 /outputs/*
 __pycache__/
 *.pyc
-/*.png
-/*.jpg
-/*.psd
-/star_spangler_bannon.html
-/star_spangler_bannon.Rmd
