@@ -145,6 +145,7 @@
     function showPlayer() {
         setupScreen.classList.remove("active");
         playerScreen.classList.add("active");
+        document.body.classList.add("player-active");
         resetPlayback();
     }
 
@@ -152,6 +153,7 @@
         stopPlayback();
         playerScreen.classList.remove("active");
         setupScreen.classList.add("active");
+        document.body.classList.remove("player-active");
     }
 
     function resetPlayback() {
@@ -167,6 +169,7 @@
         flatWords.forEach(function (fw) {
             fw.element.className = "word upcoming";
         });
+        lyricsContainer.scrollTop = 0;
         updateLineHighlighting(-1);
     }
 
@@ -298,7 +301,39 @@
             if (activeLineIdx < allLines.length - 1) {
                 allLines[activeLineIdx + 1].classList.add("adjacent-line");
             }
+            scrollActiveLineIntoView(allLines[activeLineIdx]);
         }
+    }
+
+    function scrollActiveLineIntoView(activeLine) {
+        if (!activeLine) return;
+        if (!playerScreen.classList.contains("active")) return;
+        if (!window.matchMedia("(max-width: 600px)").matches) return;
+        if (lyricsContainer.clientHeight <= 0) return;
+
+        var containerHeight = lyricsContainer.clientHeight;
+        var currentScrollTop = lyricsContainer.scrollTop;
+        var lineTop = activeLine.offsetTop;
+        var lineBottom = lineTop + activeLine.offsetHeight;
+        var topThreshold = currentScrollTop + containerHeight * 0.2;
+        var bottomThreshold = currentScrollTop + containerHeight * 0.8;
+
+        if (lineTop >= topThreshold && lineBottom <= bottomThreshold) {
+            return;
+        }
+
+        var targetScrollTop = lineTop - (containerHeight - activeLine.offsetHeight) / 2;
+        var maxScrollTop = Math.max(0, lyricsContainer.scrollHeight - containerHeight);
+        targetScrollTop = Math.max(0, Math.min(maxScrollTop, targetScrollTop));
+
+        if (Math.abs(targetScrollTop - currentScrollTop) < 2) {
+            return;
+        }
+
+        lyricsContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: isSeeking ? "auto" : "smooth",
+        });
     }
 
     function updateProgressBar(fraction) {
