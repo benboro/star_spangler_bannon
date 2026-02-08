@@ -20,7 +20,9 @@ import anthem_utils as aut
 
 def js_string(s):
     """Escape a string for use in a JavaScript source literal."""
-    return s.replace("\\", "\\\\").replace('"', '\\"')
+    s = s.replace("\\", "\\\\").replace('"', '\\"')
+    # Escape non-ASCII characters as \uXXXX for clean terminal output
+    return "".join(c if ord(c) < 128 else "\\u{:04x}".format(ord(c)) for c in s)
 
 
 def export_data_array(name, df):
@@ -32,7 +34,8 @@ def export_data_array(name, df):
         if word == "[end]":
             continue
         note = row["note_length"]
-        rows.append('        {{word: "{}", noteLength: {}}}'.format(js_string(word), note))
+        note_str = "{:.10g}".format(note)
+        rows.append('        {{word: "{}", noteLength: {}}}'.format(js_string(word), note_str))
     print(",\n".join(rows))
     print("    ];")
 
