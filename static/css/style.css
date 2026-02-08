@@ -176,6 +176,13 @@ h1 {
     text-align: center;
 }
 
+.player-hint {
+    color: #aeb2d3;
+    font-size: 0.95rem;
+    margin-bottom: 1.1rem;
+    text-align: center;
+}
+
 #lyrics-container {
     width: 100%;
     text-align: center;
@@ -221,6 +228,22 @@ h1 {
 .word.sung {
     color: #ffd700;
     opacity: 1;
+}
+
+.word-link {
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.word-link:hover {
+    text-decoration: underline;
+}
+
+.word-link:focus-visible {
+    outline: 2px solid #ffd700;
+    outline-offset: 2px;
+    border-radius: 3px;
 }
 
 .duration-control {
@@ -332,6 +355,10 @@ h1 {
 
     body.player-active #player-title {
         margin-bottom: 0;
+    }
+
+    body.player-active .player-hint {
+        margin-bottom: 0.4rem;
     }
 
     body.player-active .time-display {

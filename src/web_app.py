@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import json
 
 from flask import Flask, jsonify, render_template, request
 
@@ -50,6 +51,14 @@ def get_bref_karaoke_lines():
     return [line for line in lines if line]
 
 
+def get_bref_links():
+    """Read bref_spangled_banner.json and return ordered Baseball Reference links."""
+    path = os.path.join(DATA_DIR, "bref_spangled_banner.json")
+    with open(path, "r", encoding="utf-8") as f:
+        entries = json.load(f)
+    return [entry.get("bref_link") for entry in entries]
+
+
 def build_ssb_lines(df, line_word_counts):
     """Group SSB dataframe rows into lines based on word counts from lyrics text."""
     lines = []
@@ -76,9 +85,11 @@ def build_ssb_lines(df, line_word_counts):
     return lines
 
 
-def build_bref_lines(df, bref_karaoke_lines):
+def build_bref_lines(df, bref_karaoke_lines, bref_links):
     """Group BREF dataframe rows into lines based on karaoke lines in bref_spangled_banner.txt."""
     df_filtered = df[df["words"] != "[end]"].copy()
+    if len(bref_links) < len(df_filtered):
+        raise ValueError("bref link data has fewer entries than timing words")
 
     lines = []
     idx = 0
@@ -95,6 +106,7 @@ def build_bref_lines(df, bref_karaoke_lines):
                 "startTime": round(row["word_start_time"], 4),
                 "endTime": round(row["word_cum_time"], 4),
                 "duration": round(row["word_time"], 4),
+                "link": bref_links[idx] if idx < len(bref_links) else None,
             })
             assembled.append(row["words"])
             idx += 1
@@ -121,6 +133,7 @@ def build_bref_lines(df, bref_karaoke_lines):
                 "startTime": round(row["word_start_time"], 4),
                 "endTime": round(row["word_cum_time"], 4),
                 "duration": round(row["word_time"], 4),
+                "link": bref_links[idx] if idx < len(bref_links) else None,
             })
             idx += 1
         lines.append({"words": trailing_words})
@@ -149,7 +162,8 @@ def timing():
 
     if bref:
         bref_karaoke_lines = get_bref_karaoke_lines()
-        lines = build_bref_lines(df, bref_karaoke_lines)
+        bref_links = get_bref_links()
+        lines = build_bref_lines(df, bref_karaoke_lines, bref_links)
     else:
         line_word_counts = get_ssb_line_word_counts()
         lines = build_ssb_lines(df, line_word_counts)

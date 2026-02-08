@@ -18,6 +18,7 @@
     const backBtn = document.getElementById("back-btn");
     const setupTitle = document.getElementById("setup-title");
     const playerTitle = document.getElementById("player-title");
+    const playerHint = document.getElementById("player-hint");
 
     // State
     let timingData = null;
@@ -49,6 +50,25 @@
         setupTitle.textContent = trackerTitle;
         playerTitle.textContent = trackerTitle;
         document.title = trackerTitle;
+    }
+
+    function updatePlayerHint(showBrefHint) {
+        if (!playerHint) return;
+        if (showBrefHint) {
+            playerHint.textContent = "Tip: Click a name to open their Baseball Reference page.";
+            playerHint.hidden = false;
+        } else {
+            playerHint.textContent = "";
+            playerHint.hidden = true;
+        }
+    }
+
+    function setWordState(element, state) {
+        var className = "word " + state;
+        if (element.tagName === "A") {
+            className += " word-link";
+        }
+        element.className = className;
     }
 
     function normalizeDuration(value) {
@@ -115,22 +135,35 @@
     function buildLyrics(data) {
         lyricsContainer.innerHTML = "";
         flatWords = [];
+        updatePlayerHint(Boolean(data.bref));
+
+        var hasBrefLinks = Boolean(data.bref);
 
         data.lines.forEach(function (line) {
             var lineDiv = document.createElement("div");
             lineDiv.className = "lyric-line";
 
             line.words.forEach(function (w) {
-                var span = document.createElement("span");
-                span.className = "word upcoming";
-                span.textContent = w.word;
-                lineDiv.appendChild(span);
+                var wordEl;
+
+                if (hasBrefLinks && w.link) {
+                    wordEl = document.createElement("a");
+                    wordEl.href = w.link;
+                    wordEl.target = "_blank";
+                    wordEl.rel = "noopener noreferrer";
+                } else {
+                    wordEl = document.createElement("span");
+                }
+
+                setWordState(wordEl, "upcoming");
+                wordEl.textContent = w.word;
+                lineDiv.appendChild(wordEl);
                 lineDiv.appendChild(document.createTextNode(" "));
 
                 flatWords.push({
                     startTime: w.startTime,
                     endTime: w.endTime,
-                    element: span,
+                    element: wordEl,
                     lineElement: lineDiv,
                 });
             });
@@ -167,7 +200,7 @@
 
         // Reset all words to upcoming
         flatWords.forEach(function (fw) {
-            fw.element.className = "word upcoming";
+            setWordState(fw.element, "upcoming");
         });
         lyricsContainer.scrollTop = 0;
         updateLineHighlighting(-1);
@@ -235,7 +268,7 @@
             pauseOffset = totalDuration * 1000;
             // Mark all words as sung
             flatWords.forEach(function (fw) {
-                fw.element.className = "word sung";
+                setWordState(fw.element, "sung");
             });
             updateLineHighlighting(-1);
             return;
@@ -268,11 +301,11 @@
     function updateWordStates(activeIdx) {
         flatWords.forEach(function (fw, i) {
             if (i < activeIdx) {
-                fw.element.className = "word sung";
+                setWordState(fw.element, "sung");
             } else if (i === activeIdx) {
-                fw.element.className = "word active";
+                setWordState(fw.element, "active");
             } else {
-                fw.element.className = "word upcoming";
+                setWordState(fw.element, "upcoming");
             }
         });
 
