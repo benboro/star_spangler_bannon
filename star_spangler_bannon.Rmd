@@ -106,7 +106,9 @@ width: inherit;
 
 ```
 
-**Update:** A live tracker for this project is available at <https://borovinsky.com/ssb-player/>.
+# Update (Feb. 8, 2026)
+
+A live tracker for this project is available at <https://borovinsky.com/ssb-player/>.
 
 ---
 
