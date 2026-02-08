@@ -16,6 +16,7 @@
     const timeTotal = document.getElementById("time-total");
     const playPauseBtn = document.getElementById("play-pause-btn");
     const backBtn = document.getElementById("back-btn");
+    const setupTitle = document.getElementById("setup-title");
 
     // State
     let timingData = null;
@@ -26,6 +27,8 @@
     let currentWordIndex = -1;
     let animFrameId = null;
     let totalDuration = 0;
+    const standardTitle = "Star Spangled Banner Tracker";
+    const baseballReferenceTitle = "Star Spangler Bannon Tracker";
 
     // Format time like anthem_utils.seconds_to_minutes
     function formatTime(totalSeconds) {
@@ -34,10 +37,22 @@
         return minutes + ":" + seconds;
     }
 
+    function getTrackerTitle() {
+        return brefToggle.checked ? baseballReferenceTitle : standardTitle;
+    }
+
+    function updateTrackerTitle() {
+        var trackerTitle = getTrackerTitle();
+        setupTitle.textContent = trackerTitle;
+        document.title = trackerTitle;
+    }
+
     // Duration slider
     durationSlider.addEventListener("input", function () {
         durationDisplay.textContent = this.value;
     });
+    brefToggle.addEventListener("change", updateTrackerTitle);
+    updateTrackerTitle();
 
     // Prepare Track button
     prepareBtn.addEventListener("click", function () {
