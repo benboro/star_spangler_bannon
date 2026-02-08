@@ -5,6 +5,7 @@
     const setupScreen = document.getElementById("setup-screen");
     const playerScreen = document.getElementById("player-screen");
     const durationSlider = document.getElementById("duration-slider");
+    const durationInput = document.getElementById("duration-input");
     const durationDisplay = document.getElementById("duration-display");
     const brefToggle = document.getElementById("bref-toggle");
     const prepareBtn = document.getElementById("prepare-btn");
@@ -30,6 +31,8 @@
     let totalDuration = 0;
     const standardTitle = "Star Spangled Banner Tracker";
     const baseballReferenceTitle = "Star Spangler Bannon Tracker";
+    const durationMin = parseFloat(durationSlider.min);
+    const durationMax = parseFloat(durationSlider.max);
 
     // Format time like anthem_utils.seconds_to_minutes
     function formatTime(totalSeconds) {
@@ -49,16 +52,46 @@
         document.title = trackerTitle;
     }
 
-    // Duration slider
+    function normalizeDuration(value) {
+        var parsed = parseFloat(value);
+        if (!isFinite(parsed)) {
+            parsed = parseFloat(durationSlider.value);
+        }
+        if (!isFinite(parsed)) {
+            parsed = durationMin;
+        }
+
+        var rounded = Math.round(parsed * 2) / 2;
+        return Math.max(durationMin, Math.min(durationMax, rounded));
+    }
+
+    function syncDurationControls(value) {
+        var normalized = normalizeDuration(value);
+        var formatted = normalized.toFixed(1);
+        durationSlider.value = formatted;
+        durationInput.value = formatted;
+        durationDisplay.textContent = formatted;
+        return normalized;
+    }
+
+    // Duration controls
     durationSlider.addEventListener("input", function () {
-        durationDisplay.textContent = this.value;
+        syncDurationControls(this.value);
     });
+    durationInput.addEventListener("input", function () {
+        syncDurationControls(this.value);
+    });
+    durationInput.addEventListener("blur", function () {
+        syncDurationControls(this.value);
+    });
+
+    syncDurationControls(durationSlider.value);
     brefToggle.addEventListener("change", updateTrackerTitle);
     updateTrackerTitle();
 
     // Prepare Track button
     prepareBtn.addEventListener("click", function () {
-        const duration = parseFloat(durationSlider.value);
+        const duration = syncDurationControls(durationInput.value);
         const bref = brefToggle.checked;
 
         prepareBtn.textContent = "Loading...";
