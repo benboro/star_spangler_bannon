@@ -121,16 +121,9 @@ def timing():
     duration = max(30, min(200, duration))
 
     # read and compute timing using existing utilities
-    if bref:
-        filename = "bref_word_length.csv"
-        encode = "utf-8"
-    else:
-        filename = "ssb_word_length.csv"
-        encode = "cp1252"
+    filename = "bref_word_length.json" if bref else "ssb_word_length.json"
 
-    df = aut.read_lyric_data(
-        path=os.path.join(DATA_DIR, filename), encode=encode
-    )
+    df = aut.read_lyric_data(path=os.path.join(DATA_DIR, filename))
     df = aut.create_time_columns(df=df, song_duration=duration)
 
     # get SSB line word counts for line grouping

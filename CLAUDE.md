@@ -33,7 +33,7 @@ pip install pandas xlsxwriter flask
 
 ```
 star_spangler_bannon/
-├── data/           # Input data files (CSVs, lyrics text)
+├── data/           # Input data files (JSON default, CSV legacy, lyrics text)
 ├── src/            # Python source files
 ├── static/         # Web interface static assets (CSS, JS)
 ├── templates/      # Flask HTML templates
@@ -45,33 +45,36 @@ star_spangler_bannon/
 
 ### Core Files
 
-- **src/anthem_analysis.py** - CLI entry point with argparse. Supports `-t`/`--time`, `-b`/`--bref`, `-x`/`--xlsx` flags
+- **src/anthem_analysis.py** - CLI entry point with argparse. Supports `-t`/`--time`, `-b`/`--bref`, `-x`/`--xlsx`, `-c`/`--csv` flags
 - **src/anthem_utils.py** - All utility functions for time conversion, lyrics processing, data analysis, and export
 - **src/web_app.py** - Flask web interface with karaoke-style lyric player. Reuses `anthem_utils` for timing calculations
 
 ### Data Files (in `data/`)
 
-- **ssb_word_length.csv** - Word-to-note-length mapping (82 words from first stanza)
-- **bref_word_length.csv** - Baseball Reference version with MLB player names
-- **score_anthem_data.csv** - Historical Super Bowl anthem performance times
+- **ssb_word_length.json** - Word-to-note-length mapping (JSON, default)
+- **bref_word_length.json** - Baseball Reference version with MLB player names (JSON, default)
+- **score_anthem_data.json** - Historical Super Bowl anthem performance times
+- **bref_spangled_banner.json** - Baseball reference lyrics mapping
 - **star_spangled_banner.txt** - Full lyrics text
-- **bref_spangled_banner.csv** - Baseball reference lyrics mapping
+- **\*.csv** - Legacy CSV versions of the above (used with `--csv` flag)
 
 ### Key Functions in src/anthem_utils.py
 
-- `run_lyrics_analysis(song_duration, data_dir, output_dir, bref, all_cols)` - Main pipeline orchestrator
+- `run_lyrics_analysis(song_duration, data_dir, output_dir, bref, all_cols, use_csv)` - Main pipeline orchestrator
 - `create_time_columns(df, song_duration)` - Calculates timing metrics (note_share, word_time, word_cum_time, word_start_time)
-- `export_data(df, output_dir, song_duration, bool_bref, all_cols)` - Exports to CSV or formatted Excel
-- `read_lyric_data(path, encode, bool_bref)` - Loads and validates CSV data
+- `export_data(df, output_dir, song_duration, bool_bref, all_cols, use_csv)` - Exports to JSON, CSV, or formatted Excel
+- `read_lyric_data(path, encode, bool_bref)` - Loads and validates data from JSON or CSV
 - `minutes_to_seconds(time_val)` / `seconds_to_minutes(total_seconds)` - Time format conversion
 
 ### Output
 
 Generated files go to `outputs/`:
-- `track_anthem_[TIME]s.csv` - Full data with all timing columns
+- `track_anthem_[TIME]s.json` - Full data with all timing columns (default)
+- `track_anthem_[TIME]s.csv` - Full data with all timing columns (with `--csv`)
 - `track_anthem_[TIME]s.xlsx` - Formatted Excel with Words and Time columns only
 
 ## Encoding Notes
 
+- JSON data files: UTF-8 (eliminates legacy encoding complexity)
 - Star-Spangled Banner text: UTF-8
-- Internal data files and exports: cp1252
+- Legacy CSV data files and CSV exports: cp1252

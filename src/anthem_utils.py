@@ -49,21 +49,28 @@ def read_ssb_lyrics(path: str) -> list:
     return ssb_words
 
 
-def ssb_lyrics_to_dataframe(data_dir, output_filename="ssb_words.csv"):
+def ssb_lyrics_to_dataframe(data_dir, output_filename="ssb_words.json"):
     """Get lyrics in Star Spangled Banner as list of words"""
     ssb_words = read_ssb_lyrics(path=os.path.join(data_dir, "star_spangled_banner.txt"))
-    pd.DataFrame({"words": ssb_words}) \
-        .to_csv(os.path.join(data_dir, output_filename), index=False, encoding="cp1252")
+    df = pd.DataFrame({"words": ssb_words})
+    output_path = os.path.join(data_dir, output_filename)
+    if output_filename.endswith(".json"):
+        df.to_json(output_path, orient="records", indent=2)
+    else:
+        df.to_csv(output_path, index=False, encoding="cp1252")
 
 
 def read_lyric_data(path: str, encode: str = None, bool_bref: bool = False) -> pd.DataFrame:
-    """Reads lyric data from csv file and returns dataframe"""
+    """Reads lyric data from a JSON or CSV file and returns dataframe"""
     # note lengths manually calculated using sheet music from https://hymnary.org/media/fetch/147497
-    if encode is None:
-        encode = "utf-8" if bool_bref else "cp1252"
-    lyric_data = pd.read_csv(path, encoding=encode)
+    if path.endswith(".json"):
+        lyric_data = pd.read_json(path)
+    else:
+        if encode is None:
+            encode = "utf-8" if bool_bref else "cp1252"
+        lyric_data = pd.read_csv(path, encoding=encode)
     if lyric_data['note_length'].dtype != float:
-        raise Exception("Make sure every word has a corresponding note length in the csv file")
+        raise Exception("Make sure every word has a corresponding note length in the data file")
 
     return lyric_data
 
@@ -91,17 +98,26 @@ def export_data(
         output_dir: str,
         song_duration: Union[int, float],
         bool_bref: bool = False,
-        all_cols: bool = True
+        all_cols: bool = True,
+        use_csv: bool = False
 ):
-    """Exports dataframe to csv/xlsx"""
+    """Exports dataframe to json/csv/xlsx"""
 
-    file_type = 'csv' if all_cols else 'xlsx'
+    if not all_cols:
+        file_type = 'xlsx'
+    elif use_csv:
+        file_type = 'csv'
+    else:
+        file_type = 'json'
 
     export_filename = "track_anthem_{tm}s{suf}.{ftype}".format(tm=str(song_duration).replace(".","_"), suf=("_bref" if bool_bref else ""), ftype=file_type)
     export_fullpath = os.path.join(output_dir, export_filename)
 
     if all_cols:
-        df.to_csv(export_fullpath, index=False, encoding="cp1252", float_format="%.6f")
+        if use_csv:
+            df.to_csv(export_fullpath, index=False, encoding="cp1252", float_format="%.6f")
+        else:
+            df.to_json(export_fullpath, orient="records", indent=2, double_precision=6)
     else:
         # export only necessary fields (and rename them)
         cols_to_rename = {"words": "Words", "format_start_time": "Time"}
@@ -166,16 +182,17 @@ def export_data(
     print("Exported file {}".format(export_filename))
 
 
-def run_lyrics_analysis(song_duration, data_dir: str = None, output_dir: str = None, bref: bool = False, all_cols: bool = True) -> pd.DataFrame:
+def run_lyrics_analysis(song_duration, data_dir: str = None, output_dir: str = None, bref: bool = False, all_cols: bool = True, use_csv: bool = False) -> pd.DataFrame:
     """Runs through analysis process"""
-    word_length_filename = "ssb_word_length.csv"
-    encoder_read = "cp1252"
-    if bref:
-        word_length_filename = "bref_word_length.csv"
-        encoder_read = "utf-8"
+    if use_csv:
+        word_length_filename = "bref_word_length.csv" if bref else "ssb_word_length.csv"
+        encoder_read = "utf-8" if bref else "cp1252"
+    else:
+        word_length_filename = "bref_word_length.json" if bref else "ssb_word_length.json"
+        encoder_read = None
 
     lyrics_data = read_lyric_data(path=os.path.join(data_dir, word_length_filename), encode=encoder_read)
     notes_data = create_time_columns(df=lyrics_data, song_duration=song_duration)
-    export_data(notes_data, output_dir=output_dir, song_duration=song_duration, bool_bref=bref, all_cols=all_cols)
+    export_data(notes_data, output_dir=output_dir, song_duration=song_duration, bool_bref=bref, all_cols=all_cols, use_csv=use_csv)
 
     return notes_data

@@ -19,7 +19,9 @@ def main():
     parser.add_argument("-b", "--bref", action="store_true",
                         help="Use baseball reference version (MLB player names)")
     parser.add_argument("-x", "--xlsx", action="store_true",
-                        help="Export as formatted Excel instead of CSV")
+                        help="Export as formatted Excel instead of JSON")
+    parser.add_argument("-c", "--csv", action="store_true",
+                        help="Use CSV format for input/output instead of JSON (default)")
     args = parser.parse_args()
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -28,7 +30,8 @@ def main():
         data_dir=DATA_DIR,
         output_dir=OUTPUT_DIR,
         bref=args.bref,
-        all_cols=not args.xlsx
+        all_cols=not args.xlsx,
+        use_csv=args.csv
     )
 
 

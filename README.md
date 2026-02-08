@@ -9,14 +9,19 @@ Includes a baseball reference version that maps anthem words to MLB player names
 ```
 star_spangler_bannon/
 ├── data/
-│   ├── bref_spangled_banner.csv    # Baseball reference lyrics mapping
-│   ├── bref_word_length.csv        # Baseball reference word-to-note-length mapping
-│   ├── score_anthem_data.csv       # Historical Super Bowl anthem performance times
-│   ├── ssb_word_length.csv         # Word-to-note-length mapping (82 words)
+│   ├── ssb_word_length.json        # Word-to-note-length mapping (JSON, default)
+│   ├── bref_word_length.json       # Baseball reference version (JSON, default)
+│   ├── score_anthem_data.json      # Historical Super Bowl anthem performance times
+│   ├── bref_spangled_banner.json   # Baseball reference lyrics mapping
+│   ├── ssb_word_length.csv         # Word-to-note-length mapping (CSV, legacy)
+│   ├── bref_word_length.csv        # Baseball reference version (CSV, legacy)
+│   ├── score_anthem_data.csv       # Historical anthem times (CSV, legacy)
+│   ├── bref_spangled_banner.csv    # Baseball reference lyrics (CSV, legacy)
 │   └── star_spangled_banner.txt    # Full lyrics text
 ├── src/
 │   ├── anthem_analysis.py          # CLI entry point
 │   ├── anthem_utils.py             # Utility functions
+│   ├── export_js_data.py           # JS data export for static player
 │   └── web_app.py                  # Flask web interface
 ├── static/                         # Web interface static assets (CSS, JS)
 ├── templates/                      # Flask HTML templates
@@ -39,7 +44,7 @@ pip install pandas xlsxwriter flask
 Run from the project root directory:
 
 ```bash
-# Default: 120.5s duration, standard lyrics, CSV output
+# Default: 120.5s duration, standard lyrics, JSON output
 python src/anthem_analysis.py
 
 # Set a custom target duration (90 seconds)
@@ -47,6 +52,9 @@ python src/anthem_analysis.py -t 90
 
 # Use baseball reference mode with a custom duration
 python src/anthem_analysis.py --time 135.5 --bref
+
+# Use CSV format instead of JSON (backward compatibility)
+python src/anthem_analysis.py --csv
 
 # Baseball reference mode + formatted Excel output
 python src/anthem_analysis.py -t 100 -b -x
@@ -58,7 +66,8 @@ python src/anthem_analysis.py -t 100 -b -x
 |------|-------------|
 | `-t`, `--time` | Target anthem duration in seconds (default: 120.5) |
 | `-b`, `--bref` | Use baseball reference version (MLB player names) |
-| `-x`, `--xlsx` | Export as formatted Excel instead of CSV |
+| `-x`, `--xlsx` | Export as formatted Excel instead of JSON |
+| `-c`, `--csv` | Use CSV format for input/output instead of JSON (default) |
 
 ### Web Interface
 
@@ -102,7 +111,7 @@ After changes are working in the Flask app, sync them to the static player:
 1. **CSS changes** — copy `static/css/style.css` directly to `C:\Projects\website\ssb-player\style.css`.
 2. **HTML changes** — copy `templates/index.html` to `C:\Projects\website\ssb-player\index.html`, then replace the two `{{ url_for(...) }}` calls with relative paths (`style.css` and `player.js`).
 3. **JS changes** — the static `player.js` has the same UI code but replaces the `fetch("/api/timing")` call with local computation functions and embedded data arrays. Copy your UI changes into the corresponding section of `C:\Projects\website\ssb-player\player.js`, keeping the data/computation block at the top intact.
-4. **CSV data changes** — if `data/ssb_word_length.csv` or `data/bref_word_length.csv` change, regenerate the embedded JS data:
+4. **Data file changes** — if `data/ssb_word_length.json` or `data/bref_word_length.json` change, regenerate the embedded JS data:
    ```bash
    python src/export_js_data.py
    ```
@@ -123,6 +132,7 @@ The player is live at https://borovinsky.com/ssb-player/ once GitHub Pages deplo
 
 Generated files are saved to the `outputs/` directory:
 
-- `track_anthem_[TIME]s.csv` - Full data with all timing columns (default)
+- `track_anthem_[TIME]s.json` - Full data with all timing columns (default)
+- `track_anthem_[TIME]s.csv` - Full data with all timing columns (with `--csv`)
 - `track_anthem_[TIME]s.xlsx` - Formatted Excel with Words and Time columns only (with `-x`)
 - `_bref` suffix added when using baseball reference mode

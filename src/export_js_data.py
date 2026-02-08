@@ -1,10 +1,10 @@
-"""Export CSV data as JavaScript constants for the static GitHub Pages player.
+"""Export JSON data as JavaScript constants for the static GitHub Pages player.
 
 Usage:
     python src/export_js_data.py
 
 Prints JavaScript variable declarations to stdout. Redirect to a file or
-copy-paste into player.js if the source CSVs are ever updated.
+copy-paste into player.js if the source data files are ever updated.
 """
 
 import os
@@ -56,13 +56,13 @@ def export_line_word_counts():
 
 def main():
     ssb_df = aut.read_lyric_data(
-        path=os.path.join(DATA_DIR, "ssb_word_length.csv"), encode="cp1252"
+        path=os.path.join(DATA_DIR, "ssb_word_length.json")
     )
     bref_df = aut.read_lyric_data(
-        path=os.path.join(DATA_DIR, "bref_word_length.csv"), encode="utf-8"
+        path=os.path.join(DATA_DIR, "bref_word_length.json")
     )
 
-    print("    // Auto-generated from CSV data. Do not edit manually.")
+    print("    // Auto-generated from JSON data. Do not edit manually.")
     print()
     export_data_array("SSB_DATA", ssb_df)
     print()
