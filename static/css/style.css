@@ -74,6 +74,15 @@ h1 {
     color: #ccccdd;
 }
 
+.toggle-group {
+    display: flex;
+    justify-content: center;
+}
+
+.toggle-group .checkbox-label {
+    margin-bottom: 0;
+}
+
 #duration-slider {
     width: 100%;
     height: 6px;
