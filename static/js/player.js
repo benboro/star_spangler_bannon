@@ -17,6 +17,7 @@
     const playPauseBtn = document.getElementById("play-pause-btn");
     const backBtn = document.getElementById("back-btn");
     const setupTitle = document.getElementById("setup-title");
+    const playerTitle = document.getElementById("player-title");
 
     // State
     let timingData = null;
@@ -44,6 +45,7 @@
     function updateTrackerTitle() {
         var trackerTitle = getTrackerTitle();
         setupTitle.textContent = trackerTitle;
+        playerTitle.textContent = trackerTitle;
         document.title = trackerTitle;
     }
 
