@@ -106,6 +106,10 @@ width: inherit;
 
 ```
 
+**Update:** A live tracker for this project is available at <https://borovinsky.com/ssb-player/>.
+
+---
+
 # Background
 
 The Super Bowl is the most-watched annual event in the world. According to [Nielsen](https://www.nielsen.com/news-center/2023/super-bowl-lvii-totals-more-than-113-million-viewers-ranks-second-most-watched-game-ever/), 113 million viewers watched Super Bowl LVII in 2023. This means sports fans are not the only ones tuning in to the final game of the National Football League (NFL) season.
