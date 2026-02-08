@@ -55,7 +55,7 @@
     function updatePlayerHint(showBrefHint) {
         if (!playerHint) return;
         if (showBrefHint) {
-            playerHint.textContent = "Tip: Click a name to open their Baseball Reference page.";
+            playerHint.textContent = "Hint: Click a name to open their Baseball Reference page.";
             playerHint.hidden = false;
         } else {
             playerHint.textContent = "";
