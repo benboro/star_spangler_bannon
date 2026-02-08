@@ -14,6 +14,26 @@ body {
     align-items: center;
 }
 
+.return-home-btn {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1000;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    background-color: #333355;
+    color: #ccccdd;
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.return-home-btn:hover {
+    background-color: #444466;
+    transform: scale(1.02);
+}
+
 .screen {
     display: none;
     flex-direction: column;
@@ -227,6 +247,12 @@ h1 {
 
 /* Responsive */
 @media (max-width: 600px) {
+    .return-home-btn {
+        top: 0.75rem;
+        left: 0.75rem;
+        font-size: 0.85rem;
+    }
+
     .screen {
         padding: 1rem;
     }
