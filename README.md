@@ -16,7 +16,10 @@ star_spangler_bannon/
 │   └── star_spangled_banner.txt    # Full lyrics text
 ├── src/
 │   ├── anthem_analysis.py          # CLI entry point
-│   └── anthem_utils.py             # Utility functions
+│   ├── anthem_utils.py             # Utility functions
+│   └── web_app.py                  # Flask web interface
+├── static/                         # Web interface static assets (CSS, JS)
+├── templates/                      # Flask HTML templates
 ├── outputs/                        # Generated output files
 ├── .gitignore
 ├── CLAUDE.md
@@ -26,10 +29,12 @@ star_spangler_bannon/
 ## Installation
 
 ```bash
-pip install pandas xlsxwriter
+pip install pandas xlsxwriter flask
 ```
 
 ## Usage
+
+### CLI
 
 Run from the project root directory:
 
@@ -47,13 +52,30 @@ python src/anthem_analysis.py --time 135.5 --bref
 python src/anthem_analysis.py -t 100 -b -x
 ```
 
-### CLI Options
+#### CLI Options
 
 | Flag | Description |
 |------|-------------|
 | `-t`, `--time` | Target anthem duration in seconds (default: 120.5) |
 | `-b`, `--bref` | Use baseball reference version (MLB player names) |
 | `-x`, `--xlsx` | Export as formatted Excel instead of CSV |
+
+### Web Interface
+
+Start the Flask development server:
+
+```bash
+python src/web_app.py
+```
+
+Then open http://localhost:5000 in your browser. The web interface provides a karaoke-style lyric player that highlights words in real time based on the calculated timing.
+
+The `/api/timing` endpoint returns JSON timing data and accepts these query parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `duration` | Target anthem duration in seconds (default: 120.5, clamped to 30–200) |
+| `bref` | Set to `true` for baseball reference mode (default: `false`) |
 
 ## Output Files
 
