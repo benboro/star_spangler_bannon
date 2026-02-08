@@ -1,0 +1,712 @@
+---
+title: "Harmonizing Tradition: A Data-Driven Observation of National Anthem Performances at the Super Bowl"
+author: "Ben Borovinsky"
+date: "Feb. 10, 2024"
+output: 
+  bookdown::html_document2:
+    fig_caption: yes
+    number_sections: no
+    toc: yes
+  # html_document
+  # rmarkdown::html_document:
+  #   number_sections: false
+  #   toc: false
+  #   toc_float: false
+  #   mathjax: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(metathis)
+meta() %>%
+  meta_viewport() %>% 
+  meta_social(
+    title = "Harmonizing Tradition: A Data-Driven Observation of National Anthem Performances at the Super Bowl",
+    url = "https://borovinsky.com/star_spangler_bannon.html",
+    image = "https://borovinsky.com/assets/img/projects/ssb_taylor_cover_600.jpg",
+    twitter_card_type = "summary",
+  )
+```
+
+<!-- ```{css zoom-lib-src, eval=FALSE, include=FALSE} -->
+<!-- script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" -->
+<!-- ``` -->
+
+<!-- ```{js zoom-jquery, eval=FALSE, include=FALSE} -->
+<!--  $(document).ready(function() { -->
+<!--     $('body').prepend('<div class=\"zoomDiv\"><img src=\"\" class=\"zoomImg\"></div>'); -->
+<!--     // onClick function for all plots (img's) -->
+<!--     $('img:not(.zoomImg)').click(function() { -->
+<!--       $('.zoomImg').attr('src', $(this).attr('src')).css({width: '100%'}); -->
+<!--       $('.zoomDiv').css({opacity: '1', width: 'auto', border: '1px solid white', borderRadius: '5px', position: 'fixed', top: '50%', left: '50%', marginRight: '-50%', transform: 'translate(-50%, -50%)', boxShadow: '0px 0px 50px #888888', zIndex: '50', overflow: 'auto', maxHeight: '100%'}); -->
+<!--     }); -->
+<!--     // onClick function for zoomImg -->
+<!--     $('img.zoomImg').click(function() { -->
+<!--       $('.zoomDiv').css({opacity: '0', width: '0%'});  -->
+<!--     }); -->
+<!--   }); -->
+<!-- ``` -->
+
+```{css, echo=FALSE}
+caption {
+  text-align: center;
+  color: inherit;
+}
+
+@media print{
+  a[href]:after{
+    content:"" !important;
+  }
+  a {
+    color: #337ab7 !important;
+  }
+}
+
+.table-condensed {
+  /* width: 15em; */
+  max-width: inherit;
+  margin: auto 0;
+}
+
+img {
+max-width: 500px;
+}
+
+.tabenv {
+white-space: nowrap; 
+margin: 1em auto; 
+display: flex; 
+justify-content: center;
+width: 100%;
+}
+
+.col2 {
+max-width: 15em;
+}
+
+.col3 {
+max-width: 25em;
+}
+
+.col4 {
+max-width: 30em;
+overflow-x: auto;
+}
+
+.full-bref {
+max-width: 50em;
+overflow-x: auto;
+}
+
+.over {
+overflow-y: scroll; 
+height: 25em;
+width: inherit;
+}
+
+```
+
+# Background
+
+The Super Bowl is the most-watched annual event in the world. According to [Nielsen](https://www.nielsen.com/news-center/2023/super-bowl-lvii-totals-more-than-113-million-viewers-ranks-second-most-watched-game-ever/), 113 million viewers watched Super Bowl LVII in 2023. This means sports fans are not the only ones tuning in to the final game of the National Football League (NFL) season.
+
+The Super Bowl---being the spectacle that it is---needs to attract as many people as possible. Commercials have become can't-miss television as companies deliver their best advertisements ([at a high cost](https://admeter.usatoday.com/2022/05/13/super-bowl-commercial-costs-since-1967/)) while they have the most eyes on them. The halftime show is its own spectacle in the middle of the broadcast headlined by [A-list performers](https://www.usatoday.com/story/entertainment/music/2024/01/26/super-bowl-halftime-show-performer-by-year/71990596007/). Sometimes even those in attendance can drive viewership, such as [Taylor Swift](https://www.wsj.com/business/media/nfl-posts-highest-regular-season-tv-ratings-since-2015-1817bd5f).
+
+This is also a big event for sports betting---specifically proposition bets (or prop bets). These bets capture events that are not directly tied to the result of the game. For example, a bet on the quarterback passing for a certain amount of yards is a player prop bet. There are also game prop bets, such as what the first scoring play will be (i.e. touchdown, field goal, or [safety](https://www.businessinsider.com/peyton-mannings-super-bowl-safety-las-vegas-2018-1)).
+
+And then there are the exotic prop bets. These can range from guessing the result of the coin flip to the first commercial after kickoff and even if there will be a [wardrobe malfunction](https://www.tmz.com/2023/02/10/super-bowl-prop-bets-rihanna-halftime-cleavage-wardrobe-malfunction/) during the halftime show. 
+
+One such prop bet in this group is the length of the national anthem. Much like the halftime show performers, the singer of the Star Spangled Banner is a well-known music artist, enough that oddsmakers will set betting lines for the duration of this rendition.
+
+I've placed these bets before as a goofy way to feel invested in this event. It's admittedly a fun time when you are watching with friends while simultaneously focusing on your phone timer, sweating as you chant to encourage the performer to hit the over. However, it is difficult to keep track of the pace of the song until it approaches the end.
+
+I wanted to create a python script that would help me pace the Star Spangled Banner.
+
+# Workflow
+
+## Lyric Preparation
+
+I first retrieved the lyrics to the Star Spangled Banner. My idea was that I could take the target time, divide by the number of words, and assign that value to each word. However, this solution would be quite trivial because not every word should be assigned the same amount of time. For example, the word "gallantly" should not be sung with the same time allotment as "broad."
+
+Instead, I parsed through Star Spangled Banner [sheet music](https://hymnary.org/media/fetch/147497) and counted each word's length in notes.
+
+<!-- <div class="tabenv col2"> -->
+<!-- |Word         |Note Length| -->
+<!-- |:------------|:----------| -->
+<!-- |O            |0.1875     | -->
+<!-- |say          |0.25       | -->
+<!-- |can          |0.25       | -->
+<!-- |you          |0.25       | -->
+<!-- |see          |0.5        | -->
+<!-- |&#8942;      |&#8942;    | -->
+<!-- |and          |0.125      | -->
+<!-- |the          |0.125      | -->
+<!-- |home         |0.25       | -->
+<!-- |of           |0.125      | -->
+<!-- |the          |0.25       | -->
+<!-- |brave        |0.5        | -->
+<!-- </div> -->
+
+<div class="tabenv col2">
+<div class="over">
+|Word         |Note Length|
+|:------------|:----------|
+|O            |0.1875     |
+|say          |0.25       |
+|can          |0.25       |
+|you          |0.25       |
+|see          |0.5        |
+|by           |0.125      |
+|the          |0.0625     |
+|dawn’s       |0.25       |
+|early        |0.5        |
+|light        |0.5        |
+|What         |0.125      |
+|so           |0.125      |
+|proudly      |0.375      |
+|we           |0.25       |
+|hail’d       |0.5        |
+|at           |0.125      |
+|the          |0.125      |
+|twilight’s   |0.5        |
+|last         |0.25       |
+|gleaming     |0.5        |
+|Whose        |0.125      |
+|broad        |0.0625     |
+|stripes      |0.25       |
+|and          |0.25       |
+|bright       |0.25       |
+|stars        |0.5        |
+|through      |0.125      |
+|the          |0.0625     |
+|perilous     |0.75       |
+|fight        |0.5        |
+|O’er         |0.125      |
+|the          |0.125      |
+|ramparts     |0.375      |
+|we           |0.25       |
+|watch’d      |0.5        |
+|were         |0.125      |
+|so           |0.125      |
+|gallantly    |0.75       |
+|streaming    |0.5        |
+|And          |0.125      |
+|the          |0.125      |
+|rocket’s     |0.5        |
+|red          |0.25       |
+|glare        |0.5        |
+|the          |0.125      |
+|bombs        |0.125      |
+|bursting     |0.5        |
+|in           |0.25       |
+|air          |0.5        |
+|Gave         |0.25       |
+|proof        |0.25       |
+|through      |0.125      |
+|the          |0.25       |
+|night        |0.5        |
+|that         |0.125      |
+|our          |0.125      |
+|flag         |0.25       |
+|was          |0.25       |
+|still        |0.25       |
+|there        |0.5        |
+|O            |0.25       |
+|say          |0.25       |
+|does         |0.25       |
+|that         |0.25       |
+|star-spangled|0.75       |
+|banner       |0.5        |
+|yet          |0.25       |
+|wave         |0.5        |
+|O’er         |0.125      |
+|the          |0.125      |
+|land         |0.375      |
+|of           |0.125      |
+|the          |0.125      |
+|free         |0.5        |
+|and          |0.125      |
+|the          |0.125      |
+|home         |0.25       |
+|of           |0.125      |
+|the          |0.25       |
+|brave        |0.5        |
+</div>
+</div>
+
+The next step is to convert these note lengths into note shares. This will effectively give each word a percent value for its time length relative to the entire song.
+
+<div class="tabenv col3">
+<div class="over">
+|Word         |Note Length|Note Share (%)|
+|:------------|:----------|:--------:|
+|O            |0.1875     |0.81      |
+|say          |0.25       |1.08      |
+|can          |0.25       |1.08      |
+|you          |0.25       |1.08      |
+|see          |0.5        |2.16      |
+|by           |0.125      |0.54      |
+|the          |0.0625     |0.27      |
+|dawn’s       |0.25       |1.08      |
+|early        |0.5        |2.16      |
+|light        |0.5        |2.16      |
+|What         |0.125      |0.54      |
+|so           |0.125      |0.54      |
+|proudly      |0.375      |1.62      |
+|we           |0.25       |1.08      |
+|hail’d       |0.5        |2.16      |
+|at           |0.125      |0.54      |
+|the          |0.125      |0.54      |
+|twilight’s   |0.5        |2.16      |
+|last         |0.25       |1.08      |
+|gleaming     |0.5        |2.16      |
+|Whose        |0.125      |0.54      |
+|broad        |0.0625     |0.27      |
+|stripes      |0.25       |1.08      |
+|and          |0.25       |1.08      |
+|bright       |0.25       |1.08      |
+|stars        |0.5        |2.16      |
+|through      |0.125      |0.54      |
+|the          |0.0625     |0.27      |
+|perilous     |0.75       |3.24      |
+|fight        |0.5        |2.16      |
+|O’er         |0.125      |0.54      |
+|the          |0.125      |0.54      |
+|ramparts     |0.375      |1.62      |
+|we           |0.25       |1.08      |
+|watch’d      |0.5        |2.16      |
+|were         |0.125      |0.54      |
+|so           |0.125      |0.54      |
+|gallantly    |0.75       |3.24      |
+|streaming    |0.5        |2.16      |
+|And          |0.125      |0.54      |
+|the          |0.125      |0.54      |
+|rocket’s     |0.5        |2.16      |
+|red          |0.25       |1.08      |
+|glare        |0.5        |2.16      |
+|the          |0.125      |0.54      |
+|bombs        |0.125      |0.54      |
+|bursting     |0.5        |2.16      |
+|in           |0.25       |1.08      |
+|air          |0.5        |2.16      |
+|Gave         |0.25       |1.08      |
+|proof        |0.25       |1.08      |
+|through      |0.125      |0.54      |
+|the          |0.25       |1.08      |
+|night        |0.5        |2.16      |
+|that         |0.125      |0.54      |
+|our          |0.125      |0.54      |
+|flag         |0.25       |1.08      |
+|was          |0.25       |1.08      |
+|still        |0.25       |1.08      |
+|there        |0.5        |2.16      |
+|O            |0.25       |1.08      |
+|say          |0.25       |1.08      |
+|does         |0.25       |1.08      |
+|that         |0.25       |1.08      |
+|star-spangled|0.75       |3.24      |
+|banner       |0.5        |2.16      |
+|yet          |0.25       |1.08      |
+|wave         |0.5        |2.16      |
+|O’er         |0.125      |0.54      |
+|the          |0.125      |0.54      |
+|land         |0.375      |1.62      |
+|of           |0.125      |0.54      |
+|the          |0.125      |0.54      |
+|free         |0.5        |2.16      |
+|and          |0.125      |0.54      |
+|the          |0.125      |0.54      |
+|home         |0.25       |1.08      |
+|of           |0.125      |0.54      |
+|the          |0.25       |1.08      |
+|brave        |0.5        |2.16      |
+</div>
+</div>
+
+## Time Application
+
+Below is every Super Bowl national anthem performance from 1991 to 2023 (copied from [this article](https://www.covers.com/nfl/super-bowl/props/national-anthem)).
+
+<div class="tabenv col4">
+<div class="over">
+|Super Bowl|Year|Performer                      |Time|
+|:--------:|:--:|:------------------------------|:--:|
+|    57    |2023|Chris Stapleton                |2:01|
+|    56    |2022|Mickey Guyton                  |1:52|
+|    55    |2021|Jazmine Sullivan & Eric Church |2:16|
+|    54    |2020|Demi Lovato                    |1:49|
+|    53    |2019|Gladys Knight                  |1:49|
+|    52    |2018|Pink                           |1:53|
+|    51    |2017|Luke Bryan                     |2:04|
+|    50    |2016|Lady Gaga                      |2:09|
+|    49    |2015|Idina Menzel                   |2:04|
+|    48    |2014|Renee Fleming                  |1:54|
+|    47    |2013|Alicia Keys                    |2:35|
+|    46    |2012|Kelly Clarkson                 |1:34|
+|    45    |2011|Christina Aguilera             |1:54|
+|    44    |2010|Carrie Underwood               |1:47|
+|    43    |2009|Jennifer Hudson                |2:10|
+|    42    |2008|Jordin Sparks                  |1:54|
+|    41    |2007|Billy Joel                     |1:30|
+|    40    |2006|Aaron Neville & Aretha Franklin|2:08|
+|    39    |2005|US Military Academy Choirs     |1:52|
+|    38    |2004|Beyoncé                        |2:09|
+|    37    |2003|Dixie Chicks                   |1:36|
+|    36    |2002|Mariah Carey                   |1:56|
+|    35    |2001|Backstreet Boys                |1:50|
+|    34    |2000|Faith Hill                     |2:01|
+|    33    |1999|Cher                           |1:55|
+|    32    |1998|Jewel                          |1:27|
+|    31    |1997|Luther Vandross                |1:53|
+|    30    |1996|Vanessa Williams               |1:35|
+|    29    |1995|Kathie Lee Gifford             |1:40|
+|    28    |1994|Natalie Cole                   |2:33|
+|    27    |1993|Garth Brooks                   |1:45|
+|    26    |1992|Harry Connick Jr.              |2:06|
+|    25    |1991|Whitney Houston                |1:54|
+</div>
+</div>
+
+The shortest national anthem was 1:30 in 2007 by Billy Joel; the longest was 2:35 in 2013 by Alicia Keys. Reba McEntire is announced to be the 2024 performer, and her [FanDuel](https://canada.sportsbook.fanduel.com/en/sports/event/1601171.3?idfwmarketgroup=84825.3) line sits at 89.5 seconds (other sportsbooks may vary). This line suggests this rendition could be the [shortest](https://www.covers.com/nfl/super-bowl/props/national-anthem#history) performance in Super Bowl history.
+
+::: {style="margin:1em;"}
+
+```{r, fig.align = 'center', out.width = "100%", echo=FALSE, fig.cap = "Betting line for national anthem length (in seconds) on FanDuel."}
+knitr::include_graphics("line_fanduel.png")
+```
+
+:::
+
+Using 89.5 seconds as the input, I multiplied that by each note share and performed a cumulative sum. The result below acts as a tracker for all lyrics in the national anthem.
+
+<div class="tabenv col2">
+<div class="over">
+|Word         |Time  |
+|:------------|:----:|
+|O            |0:00.0|
+|say          |0:00.7|
+|can          |0:01.7|
+|you          |0:02.7|
+|see          |0:03.6|
+|by           |0:05.6|
+|the          |0:06.0|
+|dawn’s       |0:06.3|
+|early        |0:07.3|
+|light        |0:09.2|
+|What         |0:11.1|
+|so           |0:11.6|
+|proudly      |0:12.1|
+|we           |0:13.5|
+|hail’d       |0:14.5|
+|at           |0:16.4|
+|the          |0:16.9|
+|twilight’s   |0:17.4|
+|last         |0:19.4|
+|gleaming     |0:20.3|
+|Whose        |0:22.3|
+|broad        |0:22.7|
+|stripes      |0:23.0|
+|and          |0:23.9|
+|bright       |0:24.9|
+|stars        |0:25.9|
+|through      |0:27.8|
+|the          |0:28.3|
+|perilous     |0:28.5|
+|fight        |0:31.4|
+|O’er         |0:33.4|
+|the          |0:33.9|
+|ramparts     |0:34.3|
+|we           |0:35.8|
+|watch’d      |0:36.8|
+|were         |0:38.7|
+|so           |0:39.2|
+|gallantly    |0:39.7|
+|streaming    |0:42.6|
+|And          |0:44.5|
+|the          |0:45.0|
+|rocket’s     |0:45.5|
+|red          |0:47.4|
+|glare        |0:48.4|
+|the          |0:50.3|
+|bombs        |0:50.8|
+|bursting     |0:51.3|
+|in           |0:53.2|
+|air          |0:54.2|
+|Gave         |0:56.1|
+|proof        |0:57.1|
+|through      |0:58.1|
+|the          |0:58.5|
+|night        |0:59.5|
+|that         |1:01.4|
+|our          |1:01.9|
+|flag         |1:02.4|
+|was          |1:03.4|
+|still        |1:04.3|
+|there        |1:05.3|
+|O            |1:07.2|
+|say          |1:08.2|
+|does         |1:09.2|
+|that         |1:10.1|
+|star-spangled|1:11.1|
+|banner       |1:14.0|
+|yet          |1:16.0|
+|wave         |1:16.9|
+|O’er         |1:18.9|
+|the          |1:19.3|
+|land         |1:19.8|
+|of           |1:21.3|
+|the          |1:21.8|
+|free         |1:22.2|
+|and          |1:24.2|
+|the          |1:24.7|
+|home         |1:25.1|
+|of           |1:26.1|
+|the          |1:26.6|
+|brave        |1:27.6|
+|**[end]**    |**1:29.5**|
+</div>
+</div>
+
+# Final Thoughts
+
+There is a lot of nuance with this method of pacing the national anthem; for example, some performers like to hold the "free" longer than what the note length dictates. One way around this is to standardize lyric lengths for each performer and run simulations on the aggregate of these length variances. While this might give a more real answer and therefore make the sheet music element obsolete, it would take significantly more time than I'd like to spend on this project.
+
+I had a fun time working on this project and giving a lot of effort towards something that does not warrant it. In fact, I had so much fun that I did a somewhat related side project.
+
+## Alternative Implementation
+
+If you are a baseball fan, then you are familiar with the baseball statistics website [Baseball-Reference.com](https://www.baseball-reference.com/). For many fans, this is the go-to resource for getting information on every player and manager in Major League Baseball (MLB) history.
+
+And one fan created a [parody](twitter.com/DonZemmer/status/1184329208291647488) of the Star Spangled Banner using only names from Baseball-Reference.com.
+
+<div style="display: flex; justify-content: center; max-width: 400px; margin: 0 auto;">
+<blockquote class="twitter-tweet" data-theme="light"><p lang="no" dir="ltr">1. Star Spangled Banner <a href="https://t.co/9FPpMoaO7p">pic.twitter.com/9FPpMoaO7p</a></p>&mdash; don zemmer (@DonZemmer) <a href="https://twitter.com/DonZemmer/status/1184329208291647488?ref_src=twsrc%5Etfw">October 16, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+
+So naturally I did the same process for this parody as I did for the Star Spangled Banner. I first manually retrieved every lyric along with the player's full name and Baseball-Reference page (in case you're interested).
+
+<div class="tabenv full-bref">
+<div class="over">
+|Player          |Full Name       |Page                                                        |
+|:---------------|:---------------|:-----------------------------------------------------------|
+|José Canseco    |José Canseco    |https://www.baseball-reference.com/players/c/cansejo01.shtml|
+|Byers           |Randy Byers     |https://www.baseball-reference.com/players/b/byersra01.shtml|
+|Dawson          |Andre Dawson    |https://www.baseball-reference.com/players/d/dawsoan01.shtml|
+|Lee             |Derrek Lee      |https://www.baseball-reference.com/players/l/leede02.shtml  |
+|Light           |Pat Light       |https://www.baseball-reference.com/players/l/lightpa01.shtml|
+|Watson          |Tony Watson     |https://www.baseball-reference.com/players/w/watsoto01.shtml|
+|Prough          |Bill Prough     |https://www.baseball-reference.com/players/p/prougbi01.shtml|
+|Dell            |Wheezer Dell    |https://www.baseball-reference.com/players/d/dellwh01.shtml |
+|Lee             |Cliff Lee       |https://www.baseball-reference.com/players/l/leecl02.shtml  |
+|Hale            |David Hale      |https://www.baseball-reference.com/players/h/haleda02.shtml |
+|Acta            |Manny Acta      |https://www.baseball-reference.com/managers/actama99.shtml  |
+|Twining         |Twink Twining   |https://www.baseball-reference.com/players/t/twinitw01.shtml|
+|Lasley          |Bill Lasley     |https://www.baseball-reference.com/players/l/laslebi01.shtml|
+|Mintz           |Steve Mintz     |https://www.baseball-reference.com/players/m/mintzst01.shtml|
+|Hu              |Chin-lung Hu    |https://www.baseball-reference.com/players/h/huch01.shtml   |
+|Baird           |Bob Baird       |https://www.baseball-reference.com/players/b/bairdbo01.shtml|
+|Strike          |John Strike     |https://www.baseball-reference.com/players/s/strikjo01.shtml|
+|Cantz           |Bart Cantz      |https://www.baseball-reference.com/players/c/cantzba01.shtml|
+|Bright          |Harry Bright    |https://www.baseball-reference.com/players/b/brighha01.shtml|
+|Starr           |Dick Starr      |https://www.baseball-reference.com/players/s/starrdi01.shtml|
+|Throop          |George Throop   |https://www.baseball-reference.com/players/t/throoge01.shtml|
+|Paul Powell     |Paul Powell     |https://www.baseball-reference.com/players/p/powelpa01.shtml|
+|Lis             |Joe Lis         |https://www.baseball-reference.com/players/l/lisjo01.shtml  |
+|Flythe          |Stu Flythe      |https://www.baseball-reference.com/players/f/flythst01.shtml|
+|Odor            |Rougned Odor    |https://www.baseball-reference.com/players/o/odorro01.shtml |
+|Rand            |Dick Rand       |https://www.baseball-reference.com/players/r/randdi01.shtml |
+|Partch          |Curtis Partch   |https://www.baseball-reference.com/players/p/partccu01.shtml|
+|Weeks           |Rickie Weeks    |https://www.baseball-reference.com/players/w/weeksri01.shtml|
+|Koch            |Billy Koch      |https://www.baseball-reference.com/players/k/kochbi01.shtml |
+|Wordsworth      |Favel Wordsworth|https://www.baseball-reference.com/players/w/wordsfa01.shtml|
+|Gallen          |Zac Gallen      |https://www.baseball-reference.com/players/g/galleza01.shtml|
+|Lee             |Braxton Lee     |https://www.baseball-reference.com/players/l/leebr01.shtml  |
+|Street          |Huston Street   |https://www.baseball-reference.com/players/s/streehu01.shtml|
+|Mann            |Brandon Mann    |https://www.baseball-reference.com/players/m/mannbr01.shtml |
+|Anna            |Dean Anna       |https://www.baseball-reference.com/players/a/annade01.shtml |
+|Rockett         |Pat Rockett     |https://www.baseball-reference.com/players/r/rockepa01.shtml|
+|Rettger         |George Rettger  |https://www.baseball-reference.com/players/r/rettgge01.shtml|
+|Dahl            |David Dahl      |https://www.baseball-reference.com/players/d/dahlda01.shtml |
+|Bonds           |Barry Bonds     |https://www.baseball-reference.com/players/b/bondsba01.shtml|
+|Bruske          |Jim Bruske      |https://www.baseball-reference.com/players/b/bruskji01.shtml|
+|King            |Curtis King     |https://www.baseball-reference.com/players/k/kingcu01.shtml |
+|Inge            |Brandon Inge    |https://www.baseball-reference.com/players/i/ingebr01.shtml |
+|Eyre            |Willie Eyre     |https://www.baseball-reference.com/players/e/eyrewi01.shtml |
+|Babe Ruth       |Babe Ruth       |https://www.baseball-reference.com/players/r/ruthba01.shtml |
+|Toole           |Steve Toole     |https://www.baseball-reference.com/players/t/toolest01.shtml|
+|Lon Knight      |Lon Knight      |https://www.baseball-reference.com/managers/knighlo01.shtml |
+|Thatcher        |Joe Thatcher    |https://www.baseball-reference.com/players/t/thatcjo01.shtml|
+|Flager          |Wally Flager    |https://www.baseball-reference.com/players/f/flagewa01.shtml|
+|Stillwell       |Kurt Stillwell  |https://www.baseball-reference.com/players/s/stillku01.shtml|
+|José De La Torre|José De La Torre|https://www.baseball-reference.com/players/d/delatjo01.shtml|
+|Spangler        |Al Spangler     |https://www.baseball-reference.com/players/s/spangal01.shtml|
+|Bannon          |Jimmy Bannon    |https://www.baseball-reference.com/players/b/bannoji01.shtml|
+|Yett            |Rich Yett       |https://www.baseball-reference.com/players/y/yettri01.shtml |
+|Cave            |Jake Cave       |https://www.baseball-reference.com/players/c/caveja01.shtml |
+|Orr             |Pete Orr        |https://www.baseball-reference.com/players/o/orrpe01.shtml  |
+|Dull            |Ryan Dull       |https://www.baseball-reference.com/players/d/dullry01.shtml |
+|Land            |Doc Land        |https://www.baseball-reference.com/players/l/landdo01.shtml |
+|Devers          |Rafael Devers   |https://www.baseball-reference.com/players/d/deverra01.shtml|
+|Freese          |David Freese    |https://www.baseball-reference.com/players/f/freesda01.shtml|
+|Pat Mahomes     |Pat Mahomes     |https://www.baseball-reference.com/players/m/mahompa01.shtml|
+|Sanó            |Miguel Sanó     |https://www.baseball-reference.com/players/s/sanomi01.shtml |
+|Graves          |Danny Graves    |https://www.baseball-reference.com/players/g/graveda01.shtml|
+</div>
+</div>
+
+Then I mapped each player to the sheet music to get their length in notes and calculate their note share.
+
+<div class="tabenv col3">
+<div class="over">
+|Player          |Note Length|Note Share (%)  |
+|:---------------|:----------|:--------------:|
+|José Canseco    |1.4375     |      6.22      |
+|Byers           |0.1875     |      0.81      |
+|Dawson          |0.5        |      2.16      |
+|Lee             |0.25       |      1.08      |
+|Light           |0.5        |      2.16      |
+|Watson          |0.25       |      1.08      |
+|Prough          |0.21875    |      0.95      |
+|Dell            |0.03125    |      0.14      |
+|Lee             |0.375      |      1.62      |
+|Hale            |0.5        |      2.16      |
+|Acta            |0.25       |      1.08      |
+|Twining         |0.5        |      2.16      |
+|Lasley          |0.5        |      2.16      |
+|Mintz           |0.25       |      1.08      |
+|Hu              |0.125      |      0.54      |
+|Baird           |0.0625     |      0.27      |
+|Strike          |0.25       |      1.08      |
+|Cantz           |0.25       |      1.08      |
+|Bright          |0.25       |      1.08      |
+|Starr           |0.5        |      2.16      |
+|Throop          |0.125      |      0.54      |
+|Paul Powell     |0.5625     |      2.43      |
+|Lis             |0.25       |      1.08      |
+|Flythe          |0.5        |      2.16      |
+|Odor            |0.25       |      1.08      |
+|Rand            |0.25       |      1.08      |
+|Partch          |0.125      |      0.54      |
+|Weeks           |0.25       |      1.08      |
+|Koch            |0.5        |      2.16      |
+|Wordsworth      |0.25       |      1.08      |
+|Gallen          |0.5        |      2.16      |
+|Lee             |0.25       |      1.08      |
+|Street          |0.25       |      1.08      |
+|Mann            |0.25       |      1.08      |
+|Anna            |0.25       |      1.08      |
+|Rockett         |0.5        |      2.16      |
+|Rettger         |0.75       |      3.24      |
+|Dahl            |0.125      |      0.54      |
+|Bonds           |0.125      |      0.54      |
+|Bruske          |0.25       |      1.08      |
+|King            |0.25       |      1.08      |
+|Inge            |0.25       |      1.08      |
+|Eyre            |0.5        |      2.16      |
+|Babe Ruth       |0.5        |      2.16      |
+|Toole           |0.125      |      0.54      |
+|Lon Knight      |0.75       |      3.24      |
+|Thatcher        |0.25       |      1.08      |
+|Flager          |0.5        |      2.16      |
+|Stillwell       |0.75       |      3.24      |
+|José De La Torre|1.25       |      5.41      |
+|Spangler        |0.5        |      2.16      |
+|Bannon          |0.5        |      2.16      |
+|Yett            |0.25       |      1.08      |
+|Cave            |0.5        |      2.16      |
+|Orr             |0.125      |      0.54      |
+|Dull            |0.125      |      0.54      |
+|Land            |0.375      |      1.62      |
+|Devers          |0.25       |      1.08      |
+|Freese          |0.5        |      2.16      |
+|Pat Mahomes     |0.5        |      2.16      |
+|Sanó            |0.375      |      1.62      |
+|Graves          |0.5        |      2.16      |
+</div>
+</div>
+
+The creator sang this rendition in 63 seconds, so that is what I will use for my input.
+
+<div class="tabenv col2">
+<div class="over">
+|Player          |Time            |
+|:---------------|:---------------|
+|José Canseco    |0:00.0          |
+|Byers           |0:03.9          |
+|Dawson          |0:04.4          |
+|Lee             |0:05.8          |
+|Light           |0:06.5          |
+|Watson          |0:07.8          |
+|Prough          |0:08.5          |
+|Dell            |0:09.1          |
+|Lee             |0:09.2          |
+|Hale            |0:10.2          |
+|Acta            |0:11.6          |
+|Twining         |0:12.3          |
+|Lasley          |0:13.6          |
+|Mintz           |0:15.0          |
+|Hu              |0:15.7          |
+|Baird           |0:16.0          |
+|Strike          |0:16.2          |
+|Cantz           |0:16.9          |
+|Bright          |0:17.5          |
+|Starr           |0:18.2          |
+|Throop          |0:19.6          |
+|Paul Powell     |0:19.9          |
+|Lis             |0:21.5          |
+|Flythe          |0:22.1          |
+|Odor            |0:23.5          |
+|Rand            |0:24.2          |
+|Partch          |0:24.9          |
+|Weeks           |0:25.2          |
+|Koch            |0:25.9          |
+|Wordsworth      |0:27.2          |
+|Gallen          |0:27.9          |
+|Lee             |0:29.3          |
+|Street          |0:30.0          |
+|Mann            |0:30.6          |
+|Anna            |0:31.3          |
+|Rockett         |0:32.0          |
+|Rettger         |0:33.4          |
+|Dahl            |0:35.4          |
+|Bonds           |0:35.8          |
+|Bruske          |0:36.1          |
+|King            |0:36.8          |
+|Inge            |0:37.5          |
+|Eyre            |0:38.1          |
+|Babe Ruth       |0:39.5          |
+|Toole           |0:40.9          |
+|Lon Knight      |0:41.2          |
+|Thatcher        |0:43.2          |
+|Flager          |0:43.9          |
+|Stillwell       |0:45.3          |
+|José De La Torre|0:47.3          |
+|Spangler        |0:50.7          |
+|Bannon          |0:52.1          |
+|Yett            |0:53.5          |
+|Cave            |0:54.1          |
+|Orr             |0:55.5          |
+|Dull            |0:55.8          |
+|Land            |0:56.2          |
+|Devers          |0:57.2          |
+|Freese          |0:57.9          |
+|Pat Mahomes     |0:59.3          |
+|Sanó            |1:00.6          |
+|Graves          |1:01.6          |
+|**[end]**       |**1:03.0**      |
+</div>
+</div>
+
+Did I do this extra work for something that has zero use cases? You're welcome.
+
+I appreciate you reading this blog on tracking the Star Spangled Banner (and its parody). If you're still interested and want to see my code, [here](https://github.com/benboro/star_spangler_bannon) is the link to the GitHub repository.
+
+<!-- Add target="_blank" to every link so that they open new tab -->
+```{js, echo=FALSE}  
+(function() {  
+  for (const link of document.getElementsByTagName('a')) {  
+    if (/^(https?:)?\/\//.test(link.getAttribute('href'))) link.target = '_blank';  
+  }  
+})();  
+```  
+
