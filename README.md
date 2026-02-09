@@ -18,6 +18,7 @@ pip install pandas xlsxwriter flask
 ```text
 star_spangler_bannon/
 |-- data/         # Input data (JSON default, CSV legacy, lyrics text files)
+|-- docs/         # Writeup (Rmd/HTML) and image assets
 |-- src/          # Python source (CLI + Flask app + export script)
 |-- static/       # CSS/JS for web player
 |-- templates/    # HTML templates for Flask
